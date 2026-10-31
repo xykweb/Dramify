@@ -10,7 +10,6 @@ window.DRAMIFY_CONFIG = Object.freeze({
     "2008": "B"
   }),
   connect: Object.freeze({redirectUrl: "https://connect.cloudresearch.com/participant/project/B20B7AE292/complete", completionCode: ""}),
-  completionCode: "skmxbueo",
   supabase: Object.freeze({
     url: "https://urhygljezvfxujzkmzfz.supabase.co",
     publishableKey: "sb_publishable_R3qNsaFSf9T0QX_DdGqhIw_zlRSsPtn"

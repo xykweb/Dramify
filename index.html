@@ -5,21 +5,21 @@
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <meta name="description" content="Discover new dramas on Dramify.">
   <title>Dramify</title>
-  <link rel="stylesheet" href="style.css?v=20261101-instructions41">
-  <script src="config.js?v=20261101-instructions41" defer></script>
+  <link rel="stylesheet" href="style.css?v=20261101-audit43">
+  <script src="config.js?v=20261101-audit43" defer></script>
   <script src="vendor/supabase.js" defer></script>
   <script src="vendor/xlsx.full.min.js" defer></script>
   <script src="catalog.js?v=20261020-excel6" defer></script>
-  <script src="cloud.js?v=20261101-instructions41" defer></script>
-  <script src="script.js?v=20261101-instructions41" defer></script>
-  <script src="enrollment.js?v=20261101-instructions41" defer></script>
+  <script src="cloud.js?v=20261101-audit43" defer></script>
+  <script src="script.js?v=20261101-audit43" defer></script>
+  <script src="enrollment.js?v=20261101-audit43" defer></script>
 </head>
 <body class="enrolling">
   <section class="enrollment" aria-labelledby="welcome-title">
     <div class="enrollment-card">
       <img class="enrollment-logo" src="assets/brand/Logo.jpg" alt="Dramify" width="186" height="68">
       <h1 id="welcome-title" tabindex="-1">General Instruction</h1>
-      <div class="enrollment-intro"><p>Thank you for participating in this survey, which takes about <strong>4 minutes</strong>strong> to complete and is restricted to participants using desktop devices only. Careless answers will misguide our research, so please read all the directions and questions carefully before you provide your answers.</p><p>This survey comes from Dramify, which is an upcoming streaming platform featuring AI-generated series. Before launch, we would like to better understand viewers’ preferences. We thus invite you to explore our website, discover streaming series that interest you, and share your feedback. Your input will help us improve the platform.</p><p>If you agree to participate as honestly and accurately as possible, please enter your Worker ID below and then click Next to start.</p></div>
+      <div class="enrollment-intro"><p>Thank you for participating in this survey, which takes about <strong>4 minutes</strong> to complete and is restricted to participants using desktop devices only. Careless answers will misguide our research, so please read all the directions and questions carefully before you provide your answers.</p><p>This survey comes from Dramify, which is an upcoming streaming platform featuring AI-generated series. Before launch, we would like to better understand viewers’ preferences. We thus invite you to explore our website, discover streaming series that interest you, and share your feedback. Your input will help us improve the platform.</p><p>If you agree to participate as honestly and accurately as possible, please enter your Worker ID below and then click Next to start.</p></div>
       <form id="enrollment-form">
         <fieldset id="access-step">
           <label for="participant-worker-id">Your Worker ID:</label>
@@ -79,7 +79,6 @@
     <div class="header-inner">
       <button class="menu" type="button"><span aria-hidden="true">☰</span> Menu</button>
       <label class="search"><svg aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><circle cx="10.5" cy="10.5" r="6.5"/><path d="m16 16 4 4"/></svg><input type="search" placeholder="Search Dramify" aria-label="Search Dramify" autocomplete="off"></label>
-      <button class="user-profile" type="button" aria-label="Edit your profile" aria-haspopup="dialog"><span class="user-nickname"></span><span class="user-icon" aria-hidden="true"><svg aria-hidden="true" viewBox="0 0 32 32" fill="none" stroke="currentColor" stroke-width="1.6"><circle cx="16" cy="16" r="13"/><circle cx="16" cy="12" r="4"/><path d="M7 25c1-5 4-7 9-7s8 2 9 7"/></svg></span></button>
     </div>
   </header>
   <main>
@@ -87,64 +86,17 @@
     <div class="home-promotion"><img src="assets/brand/home-banner.png" alt="New dramas on Dramify. Explore the latest dramas and find your next favorite." width="4450" height="2145"></div>
     <div class="section-heading" hidden><h1></h1><span class="heading-rule" aria-hidden="true"></span></div>
     <section class="drama-grid" aria-label="New dramas"></section>
-    <p class="wallet-notice" role="status" hidden></p>
-    <section class="wallet-view" aria-label="Wallet" hidden>
-      <div class="wallet-summary"><span class="wallet-eyebrow">Your balance</span><p><strong class="wallet-balance">100</strong> <span>coins</span></p><span class="wallet-gift">Registration successful — you've received 100 coins.</span></div>
-      <p class="wallet-explanation">Unlock all 50 episodes of a drama for 20 coins. Likes, saves and shares are free.</p>
-      <h2 class="wallet-history-title">Coin activity</h2><div class="wallet-transactions"></div>
-    </section>
-    <section class="drama-detail" aria-label="Drama viewing page" hidden></section>
+    <p class="action-notice" role="status" hidden></p>
     <p class="empty-message" hidden>No dramas found.</p>
     <noscript>Please enable JavaScript to browse Dramify.</noscript>
   </main>
   </div>
   </div>
-  <dialog class="insufficient-coins-dialog preorder-dialog" aria-labelledby="insufficient-coins-title" aria-describedby="insufficient-coins-description">
-    <h2 id="insufficient-coins-title">Not enough coins</h2>
-    <p id="insufficient-coins-description">You don't have enough coins. You need 20 coins to unlock a drama.</p>
-    <div class="preorder-dialog-actions"><button class="insufficient-coins-close preorder-confirm" type="button">Got it</button></div>
-  </dialog>
-  <dialog class="watchlist-limit-dialog preorder-dialog" aria-labelledby="watchlist-limit-title" aria-describedby="watchlist-limit-message">
+  <dialog class="watchlist-limit-dialog ui-dialog" aria-labelledby="watchlist-limit-title" aria-describedby="watchlist-limit-message">
     <h2 id="watchlist-limit-title">Watchlist is full</h2>
     <p id="watchlist-limit-message" class="watchlist-limit-message"></p>
-    <div class="preorder-dialog-actions"><button class="watchlist-limit-close preorder-confirm" type="button">OK</button></div>
+    <div class="dialog-actions"><button class="watchlist-limit-close primary-action" type="button">OK</button></div>
   </dialog>
-  <dialog class="signout-dialog preorder-dialog" aria-labelledby="signout-title" aria-describedby="signout-description">
-    <h2 id="signout-title">Finish your Dramify experience?</h2>
-    <p id="signout-description">Please select exactly 6 dramas for My Watchlist. Your responses will be saved before your Finish Code is shown.</p>
-    <p class="signout-error" role="alert" hidden></p>
-    <div class="preorder-dialog-actions"><button class="signout-dismiss" type="button">Keep exploring</button><button class="signout-confirm preorder-confirm" type="button">Confirm</button></div>
-  </dialog>
-  <dialog class="feedback-dialog feedback-workspace" aria-labelledby="feedback-title">
-    <div class="feedback-heading"><h2 id="feedback-title">Your feedback</h2><button class="feedback-close" type="button" aria-label="Close feedback">×</button></div>
-    <form id="platform-rating-form" class="feedback-section">
-      <fieldset class="platform-rating-fieldset">
-        <legend>Overall, how would you rate Dramify?</legend>
-        <p id="platform-rating-help">Choose a number from 1 to 10.</p>
-        <div class="platform-rating-options" aria-describedby="platform-rating-help">
-          <label><input type="radio" name="platformRating" value="1" required><span>1</span></label>
-          <label><input type="radio" name="platformRating" value="2" required><span>2</span></label>
-          <label><input type="radio" name="platformRating" value="3" required><span>3</span></label>
-          <label><input type="radio" name="platformRating" value="4" required><span>4</span></label>
-          <label><input type="radio" name="platformRating" value="5" required><span>5</span></label>
-          <label><input type="radio" name="platformRating" value="6" required><span>6</span></label>
-          <label><input type="radio" name="platformRating" value="7" required><span>7</span></label>
-          <label><input type="radio" name="platformRating" value="8" required><span>8</span></label>
-          <label><input type="radio" name="platformRating" value="9" required><span>9</span></label>
-          <label><input type="radio" name="platformRating" value="10" required><span>10</span></label>
-        </div>
-        <div class="platform-rating-endpoints"><span>1 = Very bad</span><span>10 = Very good</span></div>
-      </fieldset>
-      <div class="feedback-section-actions"><button class="rating-confirm" type="submit">Confirm</button><span class="rating-confirmed" role="status" hidden>✓ Confirmed</span><button class="rating-edit" type="button" hidden>Edit</button></div>
-      <p class="platform-rating-status" role="alert" hidden></p>
-    </form>
-    <form id="feedback-form" class="feedback-section comment-section">
-      <label for="feedback-text">Comment</label>
-      <p>Tell us what you think of Dramify.</p>
-      <textarea id="feedback-text" name="feedback" rows="5" maxlength="3000" required placeholder="What do you like? What could we improve?"></textarea>
-      <div class="feedback-section-actions"><button class="comment-confirm" type="submit">Confirm</button><span class="comment-confirmed" role="status" hidden>✓ Confirmed</span><button class="comment-edit" type="button" hidden>Edit</button></div>
-      <p class="feedback-status" role="alert" hidden></p>
-    </form>
-  </dialog>
+  <section class="experience-survey" hidden aria-labelledby="signout-title"></section>
 </body>
 </html>

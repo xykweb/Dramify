@@ -7,6 +7,18 @@ const participantForm = document.querySelector("#enrollment-form");
 const enrollmentError = document.querySelector("#enrollment-error");
 let siteStarted = false;
 let siteStarting = false;
+let releaseResponseLock = null;
+async function acquireResponseLock() {
+  if(releaseResponseLock || !navigator.locks)return true;
+  return new Promise((resolve,reject)=>{
+    navigator.locks.request(window.DRAMIFY_STORAGE_KEY("dramify.active-response"),{ifAvailable:true},lock=>{
+      if(!lock){resolve(false);return;}
+      return new Promise(release=>{releaseResponseLock=release;resolve(true);});
+    }).catch(reject);
+  });
+}
+window.addEventListener("pagehide",()=>{releaseResponseLock?.();releaseResponseLock=null;});
+window.addEventListener("pageshow",event=>{if(event.persisted && siteStarted)window.location.reload();});
 let activeParticipant = null;
 let stayTimerFrame = null;
 
@@ -20,7 +32,9 @@ const ACCESS_SESSION_KEY = "dramify.access.v1";
 const COMPLETION_SESSION_KEY = "dramify.completed.v1";
 const accessCodes = window.DRAMIFY_CONFIG.accessCodes;
 const RESPONSE_START_KEY="dramify.responseStart.v1";
-if(!localStorage.getItem(window.DRAMIFY_STORAGE_KEY(RESPONSE_START_KEY)))localStorage.setItem(window.DRAMIFY_STORAGE_KEY(RESPONSE_START_KEY),new Date().toISOString());
+try {
+  if(!localStorage.getItem(window.DRAMIFY_STORAGE_KEY(RESPONSE_START_KEY)))localStorage.setItem(window.DRAMIFY_STORAGE_KEY(RESPONSE_START_KEY),new Date().toISOString());
+} catch(error) {showEnrollmentError("Please allow browser storage to continue.");}
 const ASSIGNMENT_STORAGE_KEY = "dramify.assignment.v1";
 let assignedCode = null;
 function prepareAssignment() {
@@ -66,7 +80,6 @@ function isValidParticipant(value) {
   return value && value.schemaVersion === 1
     && typeof value.id === "string" && value.id.length > 0
     && typeof value.gender === "string"
-    && (value.age === null || Number.isInteger(value.age) && value.age >= 1 && value.age <= 120)
     && typeof value.country === "string"
     && typeof value.createdAt === "string"
     && (value.condition === "A" || value.condition === "B");
@@ -80,9 +93,11 @@ async function enterDramify(participant, code) {
   button.disabled = true;
   button.textContent = "Loading…";
   try {
+    if(!await acquireResponseLock()){showEnrollmentError("Dramify is already open in another tab. Please continue there or close it and try again.");return;}
     await window.DramifyContent.load(dramas);
     showDramify(participant, code);
   } catch (error) {
+    if(!siteStarted){releaseResponseLock?.();releaseResponseLock=null;}
     showEnrollmentError(location.protocol === "file:"
       ? "Please open this website using 启动网站.command in the Dramify folder, then try again."
       : "We could not load the drama content. Please check the Excel file and your connection, then try again.");
@@ -105,13 +120,10 @@ function showDramify(participant, code) {
   participant.accessCode ||= code;
   localStorage.setItem(window.DRAMIFY_STORAGE_KEY(PARTICIPANT_STORAGE_KEY), JSON.stringify(participant));
   activeParticipant = participant;
-  document.querySelector(".user-nickname").textContent = "Participant";
-  document.querySelector(".user-profile").title = "Participant";
-  document.querySelector(".user-profile").hidden = true;
   try {
     initializeDramify(participant);
   } catch (error) {
-    showEnrollmentError("We could not save your profile or wallet. Please allow browser storage and try again.");
+    showEnrollmentError("We could not save your session. Please allow browser storage and try again.");
     return;
   }
   siteStarted = true;
@@ -120,10 +132,10 @@ function showDramify(participant, code) {
   document.body.classList.remove("enrolling");
   window.DramifyCloud.start(participant);
   const savedSurvey=JSON.parse(localStorage.getItem(window.DRAMIFY_STORAGE_KEY(PARTICIPANT_STORAGE_KEY)) || "null")?.postSurvey;
-  if(savedSurvey?.inProgress) {surveyPage=Math.min(3,Math.max(0,savedSurvey.page || 0));renderSurvey();openSurveyPage();}
+  if(savedSurvey?.inProgress) {surveyPage=validSurveyPage(savedSurvey.page);renderSurvey();openSurveyPage();}
   const stayTimer = document.querySelector(".stay-timer");
   stayTimer.hidden = !["2006", "2008"].includes(participant.accessCode);
-  if (!stayTimer.hidden) {
+  if (!stayTimer.hidden && !savedSurvey?.inProgress) {
     const timerValue = document.querySelector(".stay-timer-value");
     const updateStayTimer = () => {
       if (!activeParticipant) return;
@@ -144,6 +156,7 @@ try {
   if (saved) {
     const participant = JSON.parse(saved);
     if (isValidParticipant(participant)) {
+      if(window.DRAMIFY_CONTEXT.participantId && window.DRAMIFY_CONTEXT.participantId !== (participant.connectId || participant.mturkWorkerId)) throw new Error("Connect participant changed");
       returningParticipant = participant;
       workerIdInput.value = participant.connectId || participant.mturkWorkerId || "";
       // A changed configured code invalidates the previous browser session.
@@ -177,8 +190,8 @@ participantForm.addEventListener("submit", event => {
     schemaVersion: 1,
     ...(returningParticipant || {}),
     id: returningParticipant?.id || crypto.randomUUID(),
-    gender: "",
-    age: null,
+    gender: returningParticipant?.gender || "",
+    age: returningParticipant?.age ?? null,
     country:"",
     mturkWorkerId: workerIdInput.value.trim(),
     connectId: workerIdInput.value.trim(),
@@ -220,20 +233,17 @@ function showCompletionScreen() {
   document.querySelector(".copy-code-status").hidden=!showCode;
   document.querySelector(".completion-code").textContent = completion.completionCode || "Preview complete";
   document.querySelector(".copy-key-code").hidden = !showCode;
-  document.querySelector(".completion-card p").textContent = completion.redirectUrl ? "Your responses have been saved. You will now be redirected to CloudResearch Connect to submit your participation." : completion.completionCode ? "Your responses have been saved. Copy the completion code below and return to CloudResearch Connect to submit it." : "Your responses have been saved. This is a preview; the CloudResearch Connect completion link has not been configured yet.";
+  document.querySelector(".completion-card p").textContent = completion.redirectUrl ? "Your responses have been saved. You will now be redirected to CloudResearch Connect to submit your participation." : completion.completionCode ? "Your responses have been saved. Copy the completion code below and return to CloudResearch Connect to submit it." : "Your responses have been saved. This is a preview; no research data was uploaded and no Connect submission will be made.";
   document.querySelector(".return-connect")?.remove();
   if(completion.redirectUrl && !window.DRAMIFY_CONTEXT.isTest) {const link=document.createElement("a");link.href=completion.redirectUrl;link.textContent="Return to Connect";link.className="enrollment-submit return-connect";document.querySelector(".completion-card").append(link);setTimeout(()=>window.location.assign(completion.redirectUrl),2500);}
   document.body.classList.add("enrolling");
   document.querySelector("#completion-title").focus();
 }
 
-const oldSignoutDialog = document.querySelector(".signout-dialog");
-const signoutDialog = document.createElement("section");
-signoutDialog.className="signout-dialog experience-survey";
-signoutDialog.hidden=true;
-signoutDialog.setAttribute("aria-labelledby","signout-title");
-oldSignoutDialog.replaceWith(signoutDialog);
+const signoutDialog=document.querySelector(".experience-survey");
 function openSurveyPage() {
+  if(stayTimerFrame!==null)cancelAnimationFrame(stayTimerFrame);
+  stayTimerFrame=null;
   document.querySelector("#dramify-app").hidden=true;
   signoutDialog.hidden=false;
   document.body.classList.add("surveying");
@@ -352,13 +362,14 @@ const surveyPages = [
   ],
   []
 ];
+function validSurveyPage(value){return Number.isInteger(value)&&value>=0&&value<=3?value:0;}
 let surveyPage = 0;
 let surveySaving = false;
 signoutDialog.classList.add("experience-survey");
-signoutDialog.innerHTML = `<div class="survey-heading"><h2 id="signout-title">Thank you for trying Dramify!</h2><button type="button" class="signout-dismiss" hidden disabled aria-label="Close questionnaire">×</button></div>
+signoutDialog.innerHTML = `<div class="survey-heading"><h2 id="signout-title">Thank you for trying Dramify!</h2></div>
 <p id="signout-description">Before you finish, we would like to hear about your thoughts during the experience. Please answer the following questions based on your true thoughts.</p>
 <form id="experience-survey-form"><div class="survey-page"></div></form>
-<p class="signout-error" role="alert" hidden></p><div class="survey-navigation"><button type="button" class="survey-back">Back</button><button type="button" class="survey-next preorder-confirm">Next</button><button type="button" class="signout-confirm preorder-confirm" hidden>Submit and finish</button></div>`;
+<p class="signout-error" role="alert" hidden></p><div class="survey-navigation"><button type="button" class="survey-next primary-action">Next</button><button type="button" class="signout-confirm primary-action" hidden>Submit and finish</button></div>`;
 function surveyRecord() {return JSON.parse(localStorage.getItem(window.DRAMIFY_STORAGE_KEY(PARTICIPANT_STORAGE_KEY)) || "null");}
 function saveSurvey(patch) {
   const record=surveyRecord();
@@ -397,16 +408,18 @@ function renderSurvey() {
     const record=surveyRecord();
     for(const [name,property] of [["gender","gender"],["age","age"],["income","monthlyIncome"]]) {
       const input=form.querySelector(`#survey-${name}`);input.value=record[property] ?? "";
-      input.addEventListener("change",()=>{const latest=surveyRecord();latest[property]=name==="gender"?input.value:input.value===""?null:Number(input.value);localStorage.setItem(window.DRAMIFY_STORAGE_KEY(PARTICIPANT_STORAGE_KEY),JSON.stringify(latest));window.DramifyCloud.changed();});
+      input.addEventListener("input",()=>{try {const latest=surveyRecord();latest[property]=name==="gender"?input.value:input.value===""?null:Number(input.value);localStorage.setItem(window.DRAMIFY_STORAGE_KEY(PARTICIPANT_STORAGE_KEY),JSON.stringify(latest));window.DramifyCloud.changed();}catch(error){surveyError("We could not save your response. Please try again.");}});
     }
     const comment=form.querySelector("#survey-comment");comment.value=data.comment || "";
-    comment.addEventListener("input",()=>saveSurvey({comment:comment.value}));area.append(form);
+    comment.addEventListener("input",()=>{try{saveSurvey({comment:comment.value});}catch(error){surveyError("We could not save your comment. Please try again.");}});area.append(form);
   }
-  signoutDialog.querySelector(".survey-back").hidden=true;
   signoutDialog.querySelector(".survey-next").hidden=surveyPage===3;
   signoutDialog.querySelector(".signout-confirm").hidden=surveyPage!==3;
   signoutDialog.querySelector(".signout-confirm").textContent="Submit";
   window.scrollTo(0,0);
+}
+function setSurveyDisabled(disabled) {
+  for(const input of document.querySelectorAll("#experience-survey-form input, #experience-survey-form select, #experience-survey-form textarea"))input.disabled=disabled;
 }
 function surveyError(text) {const error=document.querySelector(".signout-error");error.textContent=text;error.hidden=false;}
 function surveyComplete() {
@@ -415,9 +428,10 @@ function surveyComplete() {
 }
 signoutDialog.querySelector(".survey-next").addEventListener("click",()=>{
   if(!document.querySelector("#experience-survey-form").reportValidity())return;
-  surveyPage++;saveSurvey({page:surveyPage});renderSurvey();
+  try {
+    const next=Math.min(3,surveyPage+1);saveSurvey({page:next});surveyPage=next;renderSurvey();
+  } catch(error){surveyError("We could not save your progress. Please try again.");}
 });
-signoutDialog.querySelector(".survey-back").addEventListener("click",()=>{if(!surveySaving){surveyPage--;saveSurvey({page:surveyPage});renderSurvey();}});
 signoutDialog.addEventListener("cancel",event=>{event.preventDefault();});
 document.querySelector("#experience-survey-form").addEventListener("submit",event=>event.preventDefault());
 function canFinishExperience() {
@@ -442,20 +456,21 @@ document.querySelector(".selection-next").addEventListener("click", () => {
   document.querySelector(".signout-error").hidden = true;
   document.querySelector(".signout-confirm").disabled = !canFinishExperience();
   if(!canFinishExperience()) {window.alert(document.querySelector(".signout-error").textContent);return;}
-  surveyPage=Math.min(3,Math.max(0,surveyRecord()?.postSurvey?.page || 0));
+  surveyPage=validSurveyPage(surveyRecord()?.postSurvey?.page);
   window.DramifyCloud.changed();
   saveSurvey({inProgress:true});renderSurvey();openSurveyPage();
 });
-document.querySelector(".signout-dismiss").addEventListener("click", () => {if(!surveySaving){saveSurvey({inProgress:false});closeSurveyPage();}});
 document.querySelector(".signout-confirm").addEventListener("click", async () => {
   if (!activeParticipant) return;
   const confirmButton = document.querySelector(".signout-confirm");
   if (confirmButton.disabled) return;
   if (!canFinishExperience()) return;
-  if(!document.querySelector("#experience-survey-form").reportValidity() || !surveyComplete()) {surveyError("Please answer every rating question before submitting.");return;}
-  saveSurvey({completedAt:new Date().toISOString()});
+  document.querySelector(".signout-error").hidden=true;
+  if(!document.querySelector("#experience-survey-form").reportValidity())return;
+  if(!surveyComplete()) {surveyError("Please answer every rating question before submitting.");return;}
+  try {saveSurvey({completedAt:new Date().toISOString()});} catch(error) {surveyError("We could not save your responses. Please try again.");return;}
+  setSurveyDisabled(true);
   surveySaving=true;
-  signoutDialog.querySelector(".survey-back").disabled=true;
   confirmButton.disabled = true;
   confirmButton.textContent = "Saving…";
   try {
@@ -467,18 +482,12 @@ document.querySelector(".signout-confirm").addEventListener("click", async () =>
     confirmButton.disabled = false;
     confirmButton.textContent = "Submit";
     surveySaving=false;
-    signoutDialog.querySelector(".survey-back").disabled=false;
+    setSurveyDisabled(false);
     return;
   }
   try {
     const stored = JSON.parse(localStorage.getItem(window.DRAMIFY_STORAGE_KEY(PARTICIPANT_STORAGE_KEY)) || "null");
     if (stored && stored.id !== activeParticipant.id) throw new Error("Participant changed");
-    const feedbackKey = "dramify.feedback.v1";
-    const entries = JSON.parse(localStorage.getItem(window.DRAMIFY_STORAGE_KEY(feedbackKey)) || "[]");
-    if (!Array.isArray(entries)) throw new Error("Invalid feedback records");
-    const remaining = entries.filter(entry => entry.participantId !== activeParticipant.id);
-    if (remaining.length) localStorage.setItem(window.DRAMIFY_STORAGE_KEY(feedbackKey), JSON.stringify(remaining));
-    else localStorage.removeItem(window.DRAMIFY_STORAGE_KEY(feedbackKey));
     sessionStorage.removeItem(window.DRAMIFY_STORAGE_KEY(ACCESS_SESSION_KEY));
     sessionStorage.removeItem(window.DRAMIFY_STORAGE_KEY(COMPLETION_SESSION_KEY));
     const completedIds=JSON.parse(localStorage.getItem(window.DRAMIFY_STORAGE_KEY("dramify.completedConnectIds.v1")) || "[]");
@@ -489,12 +498,12 @@ document.querySelector(".signout-confirm").addEventListener("click", async () =>
     localStorage.removeItem(window.DRAMIFY_STORAGE_KEY(RESPONSE_START_KEY));
   } catch (error) {
     const message = document.querySelector(".signout-error");
-    message.textContent = "We could not delete your saved data. Please allow browser storage and try again.";
+    message.textContent = "Your responses were saved, but this browser could not clear the session. Please allow browser storage and retry.";
     message.hidden = false;
     confirmButton.disabled = false;
     confirmButton.textContent = "Submit";
     surveySaving=false;
-    signoutDialog.querySelector(".survey-back").disabled=false;
+    setSurveyDisabled(false);
     return;
   }
   if (stayTimerFrame !== null) cancelAnimationFrame(stayTimerFrame);
@@ -504,8 +513,7 @@ document.querySelector(".signout-confirm").addEventListener("click", async () =>
   returningParticipant = null;
   closeSurveyPage();
 
-  const profileModal = document.querySelector(".profile-dialog");
-  if (profileModal?.open) profileModal.close();
+
   window.history.replaceState(null, "", window.location.pathname + window.location.search + "#home");
   showCompletionScreen();
 });
