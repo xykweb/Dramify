@@ -5,14 +5,14 @@
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <meta name="description" content="Discover new dramas on Dramify.">
   <title>Dramify</title>
-  <link rel="stylesheet" href="style.css?v=20261101-flow37">
-  <script src="config.js?v=20261031-return35" defer></script>
+  <link rel="stylesheet" href="style.css?v=20261101-selection40">
+  <script src="config.js?v=20261101-selection40" defer></script>
   <script src="vendor/supabase.js" defer></script>
   <script src="vendor/xlsx.full.min.js" defer></script>
   <script src="catalog.js?v=20261020-excel6" defer></script>
-  <script src="cloud.js?v=20261101-flow37" defer></script>
-  <script src="script.js?v=20261025-limit28" defer></script>
-  <script src="enrollment.js?v=20261101-flow37" defer></script>
+  <script src="cloud.js?v=20261101-selection40" defer></script>
+  <script src="script.js?v=20261101-selection40" defer></script>
+  <script src="enrollment.js?v=20261101-selection40" defer></script>
 </head>
 <body class="enrolling">
   <section class="enrollment" aria-labelledby="welcome-title">
@@ -25,28 +25,17 @@
           <label for="participant-worker-id">Your Worker ID:</label>
           <input id="participant-worker-id" name="mturkWorkerId" type="text" autocomplete="off" autocapitalize="off" spellcheck="false" maxlength="64" required placeholder="Your Worker ID">
         </fieldset>
-        <fieldset id="verification-step" hidden disabled>
-          <div class="verification-number" aria-label="Number to enter"></div>
-          <label for="access-code">Verification code</label>
-          <input id="access-code" name="accessCode" type="text" inputmode="numeric" pattern="[0-9]{4}" minlength="4" maxlength="4" autocomplete="off" required placeholder="Enter the number shown above">
-        </fieldset>
-        <fieldset id="details-step" hidden disabled>
-          <label for="participant-nickname">Nickname</label>
-          <input id="participant-nickname" name="nickname" type="text" autocomplete="nickname" maxlength="50" required placeholder="Choose a nickname">
-          <label for="participant-gender">Gender</label>
-          <select id="participant-gender" name="gender" required>
-            <option value="" disabled selected>Select your gender</option>
-            <option value="female">Female</option><option value="male">Male</option>
-            <option value="non-binary">Non-binary</option><option value="self-described">Another identity</option>
-            <option value="prefer-not-to-say">Prefer not to say</option>
-          </select>
-          <label for="participant-age">Age</label>
-          <input id="participant-age" name="age" type="number" min="1" max="120" step="1" inputmode="numeric" required placeholder="Your age">
-          <label for="participant-country">Country</label>
-          <input id="participant-country" name="country" type="text" autocomplete="country-name" maxlength="100" required placeholder="Your country">
-        </fieldset>
         <fieldset id="task-step" hidden disabled>
-          <div class="task-instructions"><p>Please explore the streaming series and choose exactly 6 that you would like to watch.</p><p>You can click the + below a poster to add it to the Watchlist, and click again to remove it.</p><p>You must have exactly 6 dramas in My Watchlist to continue.</p><p>You can like and save as many dramas as you wish. These actions do not count toward your 6 watchlist selections.</p><p class="task-time-limit" hidden>Notably, you have 3 minutes to make your selections. A countdown will appear in the left sidebar. It starts when you click Okay, I got it.</p><p>When you have selected your 6 dramas, click Finished in the left sidebar to continue to the questionnaire.</p></div>
+          <div class="task-instructions">
+            <p>Next, you will be redirected to the Dramify website, where you will see 16 newly released AI-generated streaming series. Please review the list and select exactly <strong>6</strong> series that you would like to add to your watchlist.</p>
+            <p class="task-notes-heading"><strong>Notes:</strong></p>
+            <ol class="task-notes">
+              <li>You can click the “+” button below a series poster to add it to your Watchlist. Click the same button again to remove it.</li>
+              <li>You must have exactly <strong>6 streaming series</strong> in your Watchlist to continue.</li>
+              <li>You can like and save as many streaming series as you wish. These actions do not count toward your 6 watchlist selections.</li>
+              <li class="task-time-limit" hidden>You have <strong>3 minutes</strong> to make your selections. A countdown will appear in the left sidebar. It starts when you click <strong>Start exploring</strong>.</li>
+            </ol>
+          </div>
         </fieldset>
         <p id="enrollment-error" role="alert" hidden></p>
         <div class="enrollment-actions"><button id="enrollment-back" type="button" hidden>Back</button><button class="enrollment-submit" type="submit">Next</button></div>
@@ -67,6 +56,10 @@
     </div>
   </section>
   <div id="dramify-app" hidden>
+    <div class="selection-complete-bar" role="region" aria-label="Watchlist selection complete" hidden>
+      <p role="status">You have added 6 series to your Watchlist. When you are happy with your selections, click <strong>Next</strong> to continue.</p>
+      <button class="selection-next" type="button">Next</button>
+    </div>
   <aside class="sidebar" aria-label="Dramify navigation">
     <img class="sidebar-logo" src="assets/brand/Logo.jpg" alt="Dramify" width="186" height="68">
     <nav aria-label="Browse dramas">
@@ -77,7 +70,6 @@
     </nav>
       <div class="stay-timer" role="timer" hidden aria-label="Time remaining on Dramify"><svg aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><circle cx="12" cy="14" r="8"/><path d="M9 2h6M12 2v4M18 6l2-2M12 9v5l3 2"/></svg><span>Time remaining</span><span class="stay-timer-value">00:03:00.000</span></div>
     <footer class="sidebar-footer" aria-label="Information">
-      <button class="sign-out" type="button"><svg aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><path d="M10 4H4v16h6M14 8l4 4-4 4M8 12h12"/></svg>Finished</button>
       <div class="language"><svg aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><circle cx="12" cy="12" r="9"/><ellipse cx="12" cy="12" rx="4" ry="9"/><path d="M3 12h18"/></svg>English</div>
     </footer>
   </aside>
@@ -121,18 +113,6 @@
     <p id="signout-description">Please select exactly 6 dramas for My Watchlist. Your responses will be saved before your Finish Code is shown.</p>
     <p class="signout-error" role="alert" hidden></p>
     <div class="preorder-dialog-actions"><button class="signout-dismiss" type="button">Keep exploring</button><button class="signout-confirm preorder-confirm" type="button">Confirm</button></div>
-  </dialog>
-  <dialog class="profile-dialog feedback-dialog" aria-labelledby="profile-title">
-    <form id="profile-form">
-      <div class="feedback-heading"><h2 id="profile-title">Your profile</h2><button class="profile-close feedback-close" type="button" aria-label="Close profile">×</button></div>
-      <label for="profile-nickname">Nickname</label><input id="profile-nickname" type="text" maxlength="50" autocomplete="nickname" required>
-      <label for="profile-gender">Gender</label><select id="profile-gender" required><option value="" disabled>Select your gender</option><option value="female">Female</option><option value="male">Male</option><option value="non-binary">Non-binary</option><option value="self-described">Another identity</option><option value="prefer-not-to-say">Prefer not to say</option></select>
-      <label for="profile-age">Age</label><input id="profile-age" type="number" min="1" max="120" step="1" required>
-      <label for="profile-country">Country</label><input id="profile-country" type="text" autocomplete="country-name" maxlength="100" required placeholder="Your country">
-      <label for="profile-worker-id">Your Worker ID:</label><input id="profile-worker-id" type="text" readonly aria-readonly="true">
-      <p class="profile-status" role="status" hidden></p>
-      <button class="enrollment-submit" type="submit">Save changes</button>
-    </form>
   </dialog>
   <dialog class="feedback-dialog feedback-workspace" aria-labelledby="feedback-title">
     <div class="feedback-heading"><h2 id="feedback-title">Your feedback</h2><button class="feedback-close" type="button" aria-label="Close feedback">×</button></div>

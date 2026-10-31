@@ -16,3 +16,13 @@ window.DRAMIFY_CONFIG = Object.freeze({
     publishableKey: "sb_publishable_R3qNsaFSf9T0QX_DdGqhIw_zlRSsPtn"
   })
 });
+
+const contextParams=new URLSearchParams(window.location.search);
+window.DRAMIFY_CONTEXT=Object.freeze({
+ isTest:contextParams.get("mode")==="test",
+ source:contextParams.get("source") || (contextParams.has("participantId")?"connect":"direct"),
+ participantId:contextParams.get("participantId") || "",
+ assignmentId:contextParams.get("assignmentId") || "",
+ projectId:contextParams.get("projectId") || ""
+});
+window.DRAMIFY_STORAGE_KEY=key=>window.DRAMIFY_CONTEXT.isTest?"test."+key:key;

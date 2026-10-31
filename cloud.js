@@ -26,7 +26,7 @@ window.DramifyCloud = (() => {
   }
 
   function readParticipant() {
-    const record = JSON.parse(localStorage.getItem(profileKey) || "null");
+    const record = JSON.parse(localStorage.getItem(window.DRAMIFY_STORAGE_KEY(profileKey)) || "null");
     if (!record || record.id !== participantId) throw new Error("Participant changed");
     return record;
   }
@@ -48,7 +48,7 @@ window.DramifyCloud = (() => {
       behavior.detailDurationSeconds = Math.max(0, Number(behavior.detailDurationSeconds) || 0) + elapsed;
     }
     record.durationMetric = "visible-seconds-v1";
-    localStorage.setItem(profileKey, JSON.stringify(record));
+    localStorage.setItem(window.DRAMIFY_STORAGE_KEY(profileKey), JSON.stringify(record));
     lastTick = now;
   }
   function requireSixWatchlist(record) {
@@ -60,7 +60,7 @@ window.DramifyCloud = (() => {
     if (count !== 6) throw new Error("Please select exactly 6 dramas for My Watchlist before finishing.");
   }
   function buildSnapshot(record, userId, completed) {
-    const feedbackEntries = JSON.parse(localStorage.getItem("dramify.feedback.v1") || "[]");
+    const feedbackEntries = JSON.parse(localStorage.getItem(window.DRAMIFY_STORAGE_KEY("dramify.feedback.v1")) || "[]");
     if (!Array.isArray(feedbackEntries)) throw new Error("Invalid feedback records");
     const feedback = feedbackEntries.filter(entry => entry.participantId === record.id).at(-1);
     const code = record.accessCode || Object.entries(window.DRAMIFY_CONFIG.accessCodes).find(([, condition]) => condition === record.condition)?.[0];
@@ -108,11 +108,31 @@ window.DramifyCloud = (() => {
       return `${transaction.at || ""} | ${transaction.type}${stimulus} | ${Number(transaction.amount) >= 0 ? "+" : ""}${Number(transaction.amount) || 0} coins`;
     }).concat(`Balance: ${Number(record.wallet?.balance) || 0} coins`).join("\n");
     behaviorCounts.monthly_income_usd = record.monthlyIncome ?? null;
+    behaviorCounts.is_test = Boolean(record.isTest);
+    behaviorCounts.assignment_id = record.assignmentId || "";
+    behaviorCounts.project_id = record.projectId || "";
+    behaviorCounts.referrer = record.referrer || "";
     behaviorCounts.connect_id = record.connectId || "";
     behaviorCounts.recruitment_source = record.recruitmentSource || "legacy";
     behaviorCounts.browsing_duration_seconds = record.browsingDurationSeconds || 0;
     behaviorCounts.questionnaire_duration_seconds = record.questionnaireDurationSeconds || 0;
     behaviorCounts.post_survey = record.postSurvey || null;
+    const survey=record.postSurvey || {};
+    const questionKeys=["imagery_events","imagery_self","narrative_involvement","storyline_detail","narrative_depth","story_richness","telepresence_presence","telepresence_absorption","control_events","control_life","control_decisions","pleasure","time_pressure","decision_speed","drama_liking","financial_constraint"];
+    const selected=Object.values(stimuli).filter(item=>item.exposed && item.watchlist===1).length;
+    const answered=questionKeys.filter(key=>Number.isInteger(survey[key]) && survey[key]>=1 && survey[key]<=7).length;
+    const demographics=Number(Boolean(record.gender))+Number(Number.isInteger(record.age))+Number(Number.isFinite(record.monthlyIncome));
+    const now=new Date().toISOString();
+    const start=record.startDate || record.createdAt;
+    behaviorCounts.response_metadata={
+      StartDate:start,
+      EndDate:completed?now:null,
+      Progress:completed?100:Math.min(99,Math.round((1+Math.min(6,selected)+answered+demographics)/26*100)),
+      Duration__in_seconds_:Math.max(0,Math.round((Date.parse(now)-Date.parse(start))/1000)),
+      Finished:Boolean(completed),
+      ResponseId:record.id,
+      DistributionChannel:record.isTest?"preview":record.recruitmentSource || "direct"
+    };
     behaviorCounts.duration_metric = record.durationMetric || "legacy";
     return {
       interface_version: record.interfaceVersion || "watch-v4",
@@ -124,7 +144,7 @@ window.DramifyCloud = (() => {
       id: record.id,
       auth_user_id: userId,
       access_code: code,
-      nickname: record.nickname,
+      nickname: record.nickname || "Participant",
       gender: ({woman:"female", man:"male"})[record.gender] || record.gender,
       age: record.age,
       country: record.country,
@@ -166,14 +186,14 @@ window.DramifyCloud = (() => {
         }
         if (!user) throw new Error("Anonymous sign-in did not return a user");
         const latest = readParticipant();
-        localStorage.setItem(profileKey, JSON.stringify({...latest,cloudAuthId:user.id}));
+        localStorage.setItem(window.DRAMIFY_STORAGE_KEY(profileKey), JSON.stringify({...latest,cloudAuthId:user.id}));
         return user.id;
       })().catch(error => { authReady = null; throw error; });
     }
     return authReady;
   }
   function flush(completed = false) {
-    if (stopped) return Promise.resolve();
+    if (stopped || window.DRAMIFY_CONTEXT.isTest) return Promise.resolve();
     // Serialize writes. Read a fresh snapshot when a request actually executes,
     // so an earlier request cannot overwrite a more recent choice or rating.
     const work = queue.catch(() => {}).then(async () => {
@@ -236,7 +256,7 @@ window.DramifyCloud = (() => {
   async function clearSession() {
     // The final row remains in the database. Only local authentication is reset.
     try {if(client)await client.auth.signOut({scope:"local"});} catch (error) { /* Data is already saved. */ }
-    try {localStorage.removeItem(authStorageKey);} catch (error) { /* The upload remains complete even if storage cleanup is blocked. */ }
+    try {localStorage.removeItem(window.DRAMIFY_STORAGE_KEY(authStorageKey));} catch (error) { /* The upload remains complete even if storage cleanup is blocked. */ }
   }
   document.addEventListener("visibilitychange", () => {
     if (stopped || finishing) return;

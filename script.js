@@ -61,7 +61,7 @@ function initializeDramify(participant) {
   const displayed = participant.dramaOrder.map(id => byId.get(id));
   const stimulusKey = drama => `${drama.id}${drama.version}`;
   function read() {
-    const record = JSON.parse(localStorage.getItem(key) || "null");
+    const record = JSON.parse(localStorage.getItem(window.DRAMIFY_STORAGE_KEY(key)) || "null");
     if (!record || record.id !== participant.id) throw new Error("Participant changed");
     return record;
   }
@@ -79,7 +79,7 @@ function initializeDramify(participant) {
   participant.behaviors ||= {};
   participant.behaviorEvents ||= [];
   participant.interfaceVersion = "cards-v5";
-  localStorage.setItem(key,JSON.stringify(participant));
+  localStorage.setItem(window.DRAMIFY_STORAGE_KEY(key),JSON.stringify(participant));
   window.dramifyCondition = participant.condition;
   window.dramifyOrder = [...participant.dramaOrder];
 
@@ -89,7 +89,7 @@ function initializeDramify(participant) {
     try {
       const record = read();
       change(record);
-      localStorage.setItem(key,JSON.stringify(record));
+      localStorage.setItem(window.DRAMIFY_STORAGE_KEY(key),JSON.stringify(record));
       window.DramifyCloud.changed();
       return true;
     } catch (error) {notify("Your change could not be saved. Please refresh and try again.");return false;}
@@ -217,6 +217,7 @@ function initializeDramify(participant) {
   }
   function render() {
     const record=read();renderWallet(record);
+    document.querySelector(".selection-complete-bar").hidden=displayed.filter(item=>state(record,item).watchlist).length!==6;
     document.querySelector(".home-promotion").hidden=currentView!=="home";
     for(const [view,button] of Object.entries(nav))button.setAttribute("aria-pressed",String(view===currentView));
     detail.hidden=currentView!=="detail";walletView.hidden=currentView!=="wallet";grid.hidden=["detail","wallet"].includes(currentView);
