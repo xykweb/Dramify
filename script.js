@@ -1,10 +1,10 @@
 "use strict";
 
-// Keep image and title together as one stimulus.
+// Each drama shares one poster across the two title conditions.
 const dramas = Array.from({length:16}, (_, index) => ({
   id: index + 1,
-  a: {image:`assets/posters/${index + 1}a.png`},
-  b: {image:`assets/posters/${index + 1}b.png`}
+  a: {image:`assets/posters/幻灯片${index + 1}.jpeg`},
+  b: {image:`assets/posters/幻灯片${index + 1}.jpeg`}
 }));
 
 function selectStimuli(condition) {
@@ -26,21 +26,18 @@ function shuffle(stimuli) {
 // All behavioral fields are keyed by the complete image/title stimulus version.
 const dramifyIcons = {
   play:'<path d="m9 5 11 7-11 7V5Z"/>',
+  watchlist:'<path d="M12 4v16M4 12h16"/>',
   liked:'<path d="M20.8 4.6a5.5 5.5 0 0 0-7.8 0L12 5.7l-1.1-1.1a5.5 5.5 0 0 0-7.8 7.8L12 21l8.8-8.6a5.5 5.5 0 0 0 0-7.8Z"/>',
   saved:'<path d="M6 3h12v19l-6-4-6 4V3Z"/>',
   shared:'<path d="m14 3 8 7-8 7v-5C7 12 4 16 2 20c0-9 4-14 12-14V3Z"/>',
   lock:'<rect x="5" y="10" width="14" height="12" rx="2"/><path d="M8 10V6a4 4 0 0 1 8 0v4M12 15v3"/>',
-  check:'<path d="m5 12 4 4L20 5"/>'
+  check:'<path d="m5 12 4 4L20 5" fill="none" stroke-linecap="round" stroke-linejoin="round"/>'
 };
 // Anchor images to the script directory, including deployments under /Dramify/.
 const dramifyScriptBase = typeof document !== "undefined" && document.currentScript?.src ? new URL(".", document.currentScript.src).href : "";
 function setDramaImage(image, drama) {
   image.src = dramifyScriptBase ? new URL(drama.image, dramifyScriptBase).href : drama.image;
-  image.addEventListener("error", () => {
-    // Backward-compatible fallback when only code files were uploaded.
-    const legacy = `图像资源/电视剧/${drama.id}${drama.version}.png`;
-    image.src = dramifyScriptBase ? new URL(legacy, dramifyScriptBase).href : legacy;
-  }, {once:true});
+
 }
 function dramaIcon(name) {return `<svg viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.7">${dramifyIcons[name]}</svg>`;}
 
@@ -54,7 +51,7 @@ function initializeDramify(participant) {
   const empty = document.querySelector(".empty-message");
   const notice = document.querySelector(".wallet-notice");
   const insufficientDialog = document.querySelector(".insufficient-coins-dialog");
-  const nav = {home:document.querySelector(".browse-all"),unlocked:document.querySelector(".unlocked-button"),saved:document.querySelector(".watchlist-filter"),liked:document.querySelector(".liked-button"),shared:document.querySelector(".shared-button"),wallet:document.querySelector(".wallet-button"),history:document.querySelector(".history-button")};
+  const nav = {home:document.querySelector(".browse-all"),watchlist:document.querySelector(".my-watchlist-button"),liked:document.querySelector(".liked-button"),saved:document.querySelector(".watchlist-filter")};
   let currentView = "home", currentDrama = null;
   if (dramas.some(drama => !drama.a.title || !drama.b.title)) throw new Error("Drama content must be loaded from Excel before rendering");
   const selected = selectStimuli(participant.condition);
@@ -81,7 +78,7 @@ function initializeDramify(participant) {
   }
   participant.behaviors ||= {};
   participant.behaviorEvents ||= [];
-  participant.interfaceVersion = "watch-v3";
+  participant.interfaceVersion = "cards-v5";
   localStorage.setItem(key,JSON.stringify(participant));
   window.dramifyCondition = participant.condition;
   window.dramifyOrder = [...participant.dramaOrder];
@@ -101,16 +98,28 @@ function initializeDramify(participant) {
     record.behaviorEvents ||= [];
     record.behaviorEvents.push({dramaId:drama.id,version:drama.version,action,value,at:new Date().toISOString()});
   }
+  function selectedWatchlistLabel(record,drama) {return state(record,drama).watchlist ? "Remove from my watchlist" : "Add to my watchlist";}
   function actionButton(drama,action,record) {
     const button = document.createElement("button");
     button.type="button";button.className=`drama-action action-${action}`;
-    const labels={play:"Play",liked:"Like",saved:"Save",shared:"Share"};
-    button.innerHTML=dramaIcon(action);
+    const labels={watchlist:selectedWatchlistLabel(record,drama),liked:"Like",saved:"Save"};
+    const selected=Boolean(state(record,drama)[action]);
+    button.innerHTML=dramaIcon(action==="watchlist" && selected ? "check" : action);
     button.setAttribute("aria-label",`${labels[action]}: ${drama.title}`);
-    button.title=labels[action];
+    button.dataset.tooltip=labels[action];
     if(action!=="play")button.setAttribute("aria-pressed",String(Boolean(state(record,drama)[action])));
     button.addEventListener("click",()=>{
       if(action==="play") {go(`drama/${drama.id}`);return;}
+      if(action==="watchlist") {
+        const latest=read();
+        const count=displayed.filter(item=>state(latest,item).watchlist).length;
+        if(!state(latest,drama).watchlist && count>=6) {
+          const message="You can add up to 6 dramas to My Watchlist. Remove one before adding another.";
+          document.querySelector(".watchlist-limit-message").textContent=message;
+          document.querySelector(".watchlist-limit-dialog").showModal();
+          return;
+        }
+      }
       if(save(record=>{
         record.behaviors ||= {};
         const behavior={...state(record,drama)};
@@ -137,33 +146,16 @@ function initializeDramify(participant) {
     widget.append(label,stars,status);return widget;
   }
   function card(drama,record) {
-    const card=document.createElement("article");card.className="drama-card";card.dataset.id=drama.id;card.dataset.version=drama.version;
+    const card=document.createElement("article");card.className="drama-card poster-card";card.dataset.id=drama.id;card.dataset.version=drama.version;
     const artwork=document.createElement("div");artwork.className="artwork";
     const image=document.createElement("img");setDramaImage(image,drama);image.alt=drama.title;image.decoding="async";
-    image.className="poster-link";image.tabIndex=0;
-    image.setAttribute("role","link");image.setAttribute("aria-label",`View details: ${drama.title}`);
-    image.addEventListener("click",()=>go(`drama/${drama.id}`));
-    image.addEventListener("keydown",event=>{if(event.key==="Enter"){event.preventDefault();go(`drama/${drama.id}`);}});
+    const title=document.createElement("h2");title.className="poster-title";title.textContent=drama.title;
     const badge=document.createElement("span");badge.className="badge";badge.textContent="NEW";
-    artwork.append(image,badge);
-    const info=document.createElement("div");info.className="card-info";
-    const title=document.createElement("h2");title.className="drama-title";title.textContent=drama.title;
-    const play=actionButton(drama,"play",record);play.className+=" card-play";
-    const playText=document.createElement("span");playText.textContent="Play";play.append(playText);
-    info.append(title);
-    if(currentView==="home") {
-      const controls=document.createElement("div");controls.className="card-hover-actions";
-      for(const action of ["liked","saved","shared"])controls.append(actionButton(drama,action,record));
-      artwork.append(controls);info.append(play);
-    } else {
-      const controls=document.createElement("div");controls.className="collection-actions";
-      controls.append(play);
-      for(const action of ["liked","saved","shared"])controls.append(actionButton(drama,action,record));
-      info.append(controls);
-    }
-    card.append(artwork,info);
-    if(["unlocked","saved","liked","shared","history"].includes(currentView))card.append(ratingWidget(drama,record));
-    return card;
+    title.title=drama.title;
+    artwork.append(image,title,badge);
+    const controls=document.createElement("div");controls.className="poster-actions";
+    for(const action of ["watchlist","liked","saved"])controls.append(actionButton(drama,action,record));
+    card.append(artwork,controls);return card;
   }
   function requestUnlock(drama) {
     const record=read();
@@ -213,7 +205,8 @@ function initializeDramify(participant) {
     right.append(title,copy,actions,episodesTitle,episodes);layout.append(left,right);detail.append(back,layout);
   }
   function renderWallet(record) {
-    document.querySelector(".sidebar-balance").textContent=`${record.wallet.balance} coins`;
+    const balanceLabel=document.querySelector(".sidebar-balance");
+    if(balanceLabel)balanceLabel.textContent=`${record.wallet.balance} coins`;
     document.querySelector(".wallet-balance").textContent=String(record.wallet.balance);
     const rows=record.wallet.transactions.map(transaction=>{
       const row=document.createElement("div");row.className="wallet-transaction";
@@ -228,32 +221,29 @@ function initializeDramify(participant) {
     for(const [view,button] of Object.entries(nav))button.setAttribute("aria-pressed",String(view===currentView));
     detail.hidden=currentView!=="detail";walletView.hidden=currentView!=="wallet";grid.hidden=["detail","wallet"].includes(currentView);
     document.querySelector(".section-heading").hidden=currentView==="detail"||currentView==="home";
-    const headings={home:"",unlocked:"Unlocked",saved:"Saved",liked:"Liked",shared:"Shared",history:"Browsing History",wallet:"Wallet"};
+    const headings={home:"",watchlist:"My Watchlist",unlocked:"Unlocked",saved:"Saved",liked:"Liked",shared:"Shared",history:"Browsing History",wallet:"Wallet"};
     heading.textContent=headings[currentView]||"";
     empty.hidden=true;
     if(currentView==="detail"){renderDetail(currentDrama,record);return;}
     if(currentView==="wallet")return;
     let list=displayed;
-    if(["saved","liked","shared"].includes(currentView))list=list.filter(drama=>state(record,drama)[currentView]);
+    if(["watchlist","saved","liked"].includes(currentView))list=list.filter(drama=>state(record,drama)[currentView]);
     if(currentView==="unlocked")list=list.filter(drama=>record.wallet.unlocked.includes(stimulusKey(drama)));
     if(currentView==="history")list=list.filter(drama=>state(record,drama).viewCount>0).sort((a,b)=>(state(record,b).lastViewedAt||"").localeCompare(state(record,a).lastViewedAt||""));
     const query=search.value.trim().toLowerCase();list=list.filter(drama=>drama.title.toLowerCase().includes(query));
-    grid.className=currentView==="home"?"drama-grid":"drama-grid behavior-list";
+    grid.className="drama-grid";
     grid.replaceChildren(...list.map(drama=>card(drama,record)));
     if(!list.length){empty.hidden=false;empty.textContent=query?"No dramas found.":currentView==="saved"?"No saved dramas yet. Save a drama from Dramify.":currentView==="history"?"You haven't visited any dramas yet.":`No ${currentView} dramas yet.`;}
   }
   function route() {
     const route=window.location.hash.slice(1)||"home";
-    const match=/^drama\/(\d+)$/.exec(route);
     notice.hidden=true;
-    if(match&&byId.has(Number(match[1]))) {
-      currentDrama=byId.get(Number(match[1]));currentView="detail";
-      if(!save(record=>{record.behaviors ||= {};const behavior={...state(record,currentDrama)};behavior.viewCount=(behavior.viewCount||0)+1;behavior.lastViewedAt=new Date().toISOString();record.behaviors[stimulusKey(currentDrama)]=behavior;event(record,currentDrama,"view",behavior.viewCount);})){go("home");return;}
-    } else {currentView=Object.hasOwn(nav,route)?route:"home";currentDrama=null;}
+    currentView=Object.hasOwn(nav,route)?route:"home";currentDrama=null;
     render();window.scrollTo({top:0,behavior:"auto"});
   }
   function go(view) {if(window.location.hash===`#${view}`)return;window.location.hash=view;}
   for(const [view,button] of Object.entries(nav))button.addEventListener("click",()=>go(view));
+  document.querySelector(".watchlist-limit-close").addEventListener("click",()=>document.querySelector(".watchlist-limit-dialog").close());
   search.addEventListener("input",render);
   window.addEventListener("hashchange",route);
   function unlockDrama(drama) {

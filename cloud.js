@@ -40,6 +40,8 @@ window.DramifyCloud = (() => {
     const record = readParticipant();
     const elapsed = visible ? Math.max(0, (now - lastTick) / 1000) : 0;
     record.durationSeconds = Math.max(0, Number(record.durationSeconds) || 0) + elapsed;
+    if(record.postSurvey?.inProgress) record.questionnaireDurationSeconds=(record.questionnaireDurationSeconds || 0)+elapsed;
+    else record.browsingDurationSeconds=(record.browsingDurationSeconds || 0)+elapsed;
     if (detailKey && elapsed > 0) {
       record.behaviors ||= {};
       const behavior = record.behaviors[detailKey] ||= {};
@@ -48,6 +50,14 @@ window.DramifyCloud = (() => {
     record.durationMetric = "visible-seconds-v1";
     localStorage.setItem(profileKey, JSON.stringify(record));
     lastTick = now;
+  }
+  function requireSixWatchlist(record) {
+    let count = 0;
+    for (let id = 1; id <= 16; id++) {
+      const key = `${id}${(id % 2 === 1) === (record.condition === "A") ? "a" : "b"}`;
+      if (record.behaviors?.[key]?.watchlist) count++;
+    }
+    if (count !== 6) throw new Error("Please select exactly 6 dramas for My Watchlist before finishing.");
   }
   function buildSnapshot(record, userId, completed) {
     const feedbackEntries = JSON.parse(localStorage.getItem("dramify.feedback.v1") || "[]");
@@ -61,13 +71,14 @@ window.DramifyCloud = (() => {
       const key = `${id}${version}`;
       const exposed = version === ((id % 2 === 1) === (record.condition === "A") ? "a" : "b");
       if (!exposed) {
-        stimuli[key] = {exposed:false,saved:null,liked:null,shared:null,play:null,unlocked:null,choice:null,rating:null,detail_duration_seconds:null};
+        stimuli[key] = {exposed:false,watchlist:null,saved:null,liked:null,shared:null,play:null,unlocked:null,choice:null,rating:null,detail_duration_seconds:null};
         continue;
       }
       const rating = record.dramaRatings?.[key];
       const behavior = record.behaviors?.[key] || {};
       stimuli[key] = {
         exposed:true,
+        watchlist: behavior.watchlist ? 1 : 0,
         choice: choices.has(key) ? 1 : 0,
         unlocked: choices.has(key) ? 1 : 0,
         play: behavior.viewCount > 0 ? 1 : 0,
@@ -96,9 +107,15 @@ window.DramifyCloud = (() => {
       const stimulus = transaction.dramaId ? ` ${transaction.dramaId}${transaction.version || ""}` : "";
       return `${transaction.at || ""} | ${transaction.type}${stimulus} | ${Number(transaction.amount) >= 0 ? "+" : ""}${Number(transaction.amount) || 0} coins`;
     }).concat(`Balance: ${Number(record.wallet?.balance) || 0} coins`).join("\n");
+    behaviorCounts.monthly_income_usd = record.monthlyIncome ?? null;
+    behaviorCounts.connect_id = record.connectId || "";
+    behaviorCounts.recruitment_source = record.recruitmentSource || "legacy";
+    behaviorCounts.browsing_duration_seconds = record.browsingDurationSeconds || 0;
+    behaviorCounts.questionnaire_duration_seconds = record.questionnaireDurationSeconds || 0;
+    behaviorCounts.post_survey = record.postSurvey || null;
     behaviorCounts.duration_metric = record.durationMetric || "legacy";
     return {
-      interface_version: "watch-v4",
+      interface_version: record.interfaceVersion || "watch-v4",
       behavior_counts: behaviorCounts,
       behavior_events: [
         ...(record.behaviorEvents || []),
@@ -112,8 +129,8 @@ window.DramifyCloud = (() => {
       age: record.age,
       country: record.country,
       duration_seconds: Math.round((Number(record.durationSeconds) || 0) * 1000) / 1000,
-      app_rating: Number.isInteger(feedback?.rating) ? feedback.rating : null,
-      comment: feedback?.text || "",
+      app_rating: record.postSurvey ? null : Number.isInteger(feedback?.rating) ? feedback.rating : null,
+      comment: record.postSurvey ? record.postSurvey.comment || "" : feedback?.text || "",
       drama_order: record.dramaOrder,
       stimuli,
       completed: Boolean(completed),
@@ -162,7 +179,12 @@ window.DramifyCloud = (() => {
     const work = queue.catch(() => {}).then(async () => {
       const userId = await ensureAuth();
       const record = readParticipant();
-      if (completed && record.wallet?.balance !== 0) throw new Error("Please use all your coins before finishing.");
+      if (completed) {
+        requireSixWatchlist(record);
+        if(!record.gender || !Number.isInteger(record.age) || !Number.isFinite(record.monthlyIncome) || record.monthlyIncome < 0) throw new Error("Please complete your demographic information.");
+        const keys = ["imagery_events", "imagery_self", "narrative_involvement", "storyline_detail", "narrative_depth", "story_richness", "telepresence_presence", "telepresence_absorption", "control_events", "control_life", "control_decisions", "pleasure", "time_pressure", "decision_speed", "drama_liking", "financial_constraint"];
+        if (!keys.every(key => Number.isInteger(record.postSurvey?.[key]) && record.postSurvey[key] >= 1 && record.postSurvey[key] <= 7)) throw new Error("Please complete the questionnaire before finishing.");
+      }
       const row = buildSnapshot(record,userId,completed);
       const {error} = await client.from("dramify_responses").upsert(row,{onConflict:"id"});
       if (error) throw error;
@@ -197,7 +219,7 @@ window.DramifyCloud = (() => {
   async function complete() {
     if (stopped && finishing) return;
     if (stopped) throw new Error("Cloud collection has not started");
-    if (readParticipant().wallet?.balance !== 0) throw new Error("Please use all your coins before finishing.");
+    requireSixWatchlist(readParticipant());
     checkpoint();
     finishing = true;
     clearTimeout(timer);
@@ -235,8 +257,8 @@ window.DramifyCloud = (() => {
   window.addEventListener("pageshow",event => {if(event.persisted && !stopped){lastTick=performance.now();visible=document.visibilityState!=="hidden";}});
   window.addEventListener("online",changed);
   function getDurationSeconds() {
-    const stored = Math.max(0, Number(readParticipant()?.durationSeconds) || 0);
-    return stored + (!stopped && !finishing && visible ? Math.max(0, (performance.now() - lastTick) / 1000) : 0);
+    const stored = Math.max(0, Number(readParticipant()?.browsingDurationSeconds) || 0);
+    return stored + (!stopped && !finishing && visible && !readParticipant()?.postSurvey?.inProgress ? Math.max(0, (performance.now() - lastTick) / 1000) : 0);
   }
   return {start,changed,complete,clearSession,getDurationSeconds,getSyncStatus:() => ({failed:syncFailed})};
 })();

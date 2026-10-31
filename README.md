@@ -21,4 +21,8 @@
 
 ## 用户资料
 
-注册和编辑资料均使用 Male / Female 选项、Country 与 Job 文本输入。Job 保存在本地用户资料中，云端同步到现有 behavior_events JSON 的 action=profile_snapshot 记录内的 job 字段，无需新增数据库列；它不计入剧集行为数量。
+入口第一步填写 MTurk Worker ID 和 Access code，Confirm后填写 Nickname、Gender、Age、Country。Country为文本输入，不再收集Job。原Job保存位置用于Worker ID，详情见supabase/当前数据变量.md。Finished确认并上传成功后显示Finish Code，提示返回问卷。
+
+## 当前数据变量（watch-v4）
+
+以 supabase/当前数据变量.md 为当前变量定义。导出时执行 supabase/20261021_current_variables.sql 并使用 dramify_export_current；原导出视图继续保留。

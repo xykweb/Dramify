@@ -5,28 +5,30 @@
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <meta name="description" content="Discover new dramas on Dramify.">
   <title>Dramify</title>
-  <link rel="stylesheet" href="style.css?v=20261023-millis17">
-  <script src="config.js?v=20261023-codes14" defer></script>
+  <link rel="stylesheet" href="style.css?v=20261031-final36">
+  <script src="config.js?v=20261031-return35" defer></script>
   <script src="vendor/supabase.js" defer></script>
   <script src="vendor/xlsx.full.min.js" defer></script>
   <script src="catalog.js?v=20261020-excel6" defer></script>
-  <script src="cloud.js?v=20261023-codes14" defer></script>
-  <script src="script.js?v=20261023-poster16" defer></script>
-  <script src="enrollment.js?v=20261023-countdown18" defer></script>
+  <script src="cloud.js?v=20261031-final36" defer></script>
+  <script src="script.js?v=20261025-limit28" defer></script>
+  <script src="enrollment.js?v=20261031-final36" defer></script>
 </head>
 <body class="enrolling">
   <section class="enrollment" aria-labelledby="welcome-title">
     <div class="enrollment-card">
-      <img class="enrollment-logo" src="图像资源/Logo.jpg" alt="Dramify" width="186" height="68">
-      <p class="enrollment-progress">Step <span id="enrollment-step">1</span> of 2</p>
-      <h1 id="welcome-title" tabindex="-1">Before you begin</h1>
-      <p class="enrollment-intro">Please enter your MTurk Worker ID and access code to continue.</p>
+      <img class="enrollment-logo" src="assets/brand/Logo.jpg" alt="Dramify" width="186" height="68">
+      <h1 id="welcome-title" tabindex="-1">Welcome to the Dramify Survey</h1>
+      <div class="enrollment-intro"><p>Thank you for participating in this survey from Dramify! The survey takes about 4 minutes to complete and is restricted to participants using desktop devices only. Careless answers will misguide our research, so please read all the directions and questions carefully before you provide your answers.</p><p>This survey comes from Dramify, which is an upcoming streaming platform featuring AI-generated series. Before launch, we would like to better understand viewers’ preferences. We thus invite you to explore our website, discover streaming series that interest you, and share your feedback. Your input will help us improve the platform.</p><p>If you agree to participate as honestly and accurately as possible, please enter your Worker ID below and then click Next to start.</p></div>
       <form id="enrollment-form">
         <fieldset id="access-step">
-          <label for="participant-worker-id">MTurk Worker ID</label>
-          <input id="participant-worker-id" name="mturkWorkerId" type="text" autocomplete="off" autocapitalize="off" spellcheck="false" maxlength="64" required placeholder="Your MTurk Worker ID">
-          <label for="access-code">Access code</label>
-          <input id="access-code" name="accessCode" type="text" inputmode="numeric" pattern="[0-9]{4}" minlength="4" maxlength="4" autocomplete="off" required placeholder="Enter your 4-digit access code">
+          <label for="participant-worker-id">Your Worker ID:</label>
+          <input id="participant-worker-id" name="mturkWorkerId" type="text" autocomplete="off" autocapitalize="off" spellcheck="false" maxlength="64" required placeholder="Your Worker ID">
+        </fieldset>
+        <fieldset id="verification-step" hidden disabled>
+          <div class="verification-number" aria-label="Number to enter"></div>
+          <label for="access-code">Verification code</label>
+          <input id="access-code" name="accessCode" type="text" inputmode="numeric" pattern="[0-9]{4}" minlength="4" maxlength="4" autocomplete="off" required placeholder="Enter the number shown above">
         </fieldset>
         <fieldset id="details-step" hidden disabled>
           <label for="participant-nickname">Nickname</label>
@@ -43,15 +45,18 @@
           <label for="participant-country">Country</label>
           <input id="participant-country" name="country" type="text" autocomplete="country-name" maxlength="100" required placeholder="Your country">
         </fieldset>
+        <fieldset id="task-step" hidden disabled>
+          <div class="task-instructions"><p>Please explore the streaming series and choose exactly 6 that you would like to watch.</p><p>You can click the + below a poster to add it to the Watchlist, and click again to remove it.</p><p>You must have exactly 6 dramas in My Watchlist to continue.</p><p>You can like and save as many dramas as you wish. These actions do not count toward your 6 watchlist selections.</p><p class="task-time-limit" hidden>Notably, you have 3 minutes to make your selections. A countdown will appear in the left sidebar. It starts when you click Start exploring.</p><p>When you have selected your 6 dramas, click Finished in the left sidebar, then click Confirm to continue to the next page.</p></div>
+        </fieldset>
         <p id="enrollment-error" role="alert" hidden></p>
-        <div class="enrollment-actions"><button id="enrollment-back" type="button" hidden>Back</button><button class="enrollment-submit" type="submit">Confirm</button></div>
+        <div class="enrollment-actions"><button id="enrollment-back" type="button" hidden>Back</button><button class="enrollment-submit" type="submit">Next</button></div>
       </form>
       <noscript>Please enable JavaScript to continue to Dramify.</noscript>
     </div>
   </section>
   <section class="completion-screen" hidden aria-labelledby="completion-title">
     <div class="enrollment-card completion-card">
-      <img class="enrollment-logo" src="图像资源/Logo.jpg" alt="Dramify" width="186" height="68">
+      <img class="enrollment-logo" src="assets/brand/Logo.jpg" alt="Dramify" width="186" height="68">
       <div class="completion-check" aria-hidden="true">✓</div>
       <h1 id="completion-title" tabindex="-1">Thank you! You have completed the Dramify experience.</h1>
       <p>Your <strong>Finish Code</strong> is shown below. Please copy this code, then close this page and return to the survey to continue with the remaining questions.</p>
@@ -63,23 +68,19 @@
   </section>
   <div id="dramify-app" hidden>
   <aside class="sidebar" aria-label="Dramify navigation">
-    <img class="sidebar-logo" src="图像资源/Logo.jpg" alt="Dramify" width="186" height="68">
+    <img class="sidebar-logo" src="assets/brand/Logo.jpg" alt="Dramify" width="186" height="68">
     <nav aria-label="Browse dramas">
       <button class="browse-all" type="button" aria-pressed="true"><svg aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/></svg>Home</button>
-      <button class="unlocked-button" type="button" aria-pressed="false"><svg aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><rect x="4" y="10" width="16" height="12" rx="2"/><path d="M8 10V6a4 4 0 0 1 7.5-2M9 16l2 2 4-4"/></svg>Unlocked</button>
-      <button class="watchlist-filter" type="button" aria-pressed="false"><svg aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><rect x="2" y="5" width="20" height="14" rx="2"/><circle cx="8" cy="11" r="2.5"/><circle cx="16" cy="11" r="2.5"/><path d="M7 16h10"/></svg>Saved</button>
+      <button class="my-watchlist-button" type="button" aria-pressed="false"><svg aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><rect x="2" y="5" width="20" height="14" rx="2"/><circle cx="8" cy="11" r="2.5"/><circle cx="16" cy="11" r="2.5"/><path d="M7 16h10"/></svg>My Watchlist</button>
       <button class="liked-button" type="button" aria-pressed="false"><svg aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><path d="M20.8 4.6a5.5 5.5 0 0 0-7.8 0L12 5.7l-1.1-1.1a5.5 5.5 0 0 0-7.8 7.8L12 21l8.8-8.6a5.5 5.5 0 0 0 0-7.8Z"/></svg>Liked</button>
-      <button class="shared-button" type="button" aria-pressed="false"><svg aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><path d="m14 3 8 7-8 7v-5C7 12 4 16 2 20c0-9 4-14 12-14V3Z"/></svg>Shared</button>
-      <button class="wallet-button" type="button" aria-pressed="false"><svg aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><rect x="3" y="5" width="18" height="15" rx="2"/><path d="M3 9h18M16 13h5v4h-5zM6 5V3h12v2"/></svg><span>Wallet</span><span class="sidebar-balance" aria-live="polite" aria-atomic="true">100 coins</span></button>
-      <button class="history-button" type="button" aria-pressed="false"><svg aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><path d="M3 11a9 9 0 1 1 2 7M3 4v7h7M12 7v5l3 2"/></svg>Browsing History</button>
-      <button class="feedback-open" type="button"><svg aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><path d="M4 4h16v12H9l-5 4V4Z"/><path d="M8 8h8M8 12h5"/></svg>Feedback</button>
+      <button class="watchlist-filter" type="button" aria-pressed="false"><svg aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><path d="M6 3h12v19l-6-4-6 4V3Z"/></svg>Saved</button>
     </nav>
+      <div class="stay-timer" role="timer" hidden aria-label="Time remaining on Dramify"><svg aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><circle cx="12" cy="14" r="8"/><path d="M9 2h6M12 2v4M18 6l2-2M12 9v5l3 2"/></svg><span>Time remaining</span><span class="stay-timer-value">00:03:00.000</span></div>
     <footer class="sidebar-footer" aria-label="Information">
       <button class="sign-out" type="button"><svg aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><path d="M10 4H4v16h6M14 8l4 4-4 4M8 12h12"/></svg>Finished</button>
       <div class="language"><svg aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><circle cx="12" cy="12" r="9"/><ellipse cx="12" cy="12" rx="4" ry="9"/><path d="M3 12h18"/></svg>English</div>
     </footer>
   </aside>
-      <div class="stay-timer" role="timer" hidden aria-label="Time remaining on Dramify"><svg aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><circle cx="12" cy="14" r="8"/><path d="M9 2h6M12 2v4M18 6l2-2M12 9v5l3 2"/></svg><span>Time remaining</span><span class="stay-timer-value">00:03:00.000</span></div>
   <div class="page-content">
   <header class="site-header">
     <div class="header-inner">
@@ -110,9 +111,14 @@
     <p id="insufficient-coins-description">You don't have enough coins. You need 20 coins to unlock a drama.</p>
     <div class="preorder-dialog-actions"><button class="insufficient-coins-close preorder-confirm" type="button">Got it</button></div>
   </dialog>
+  <dialog class="watchlist-limit-dialog preorder-dialog" aria-labelledby="watchlist-limit-title" aria-describedby="watchlist-limit-message">
+    <h2 id="watchlist-limit-title">Watchlist is full</h2>
+    <p id="watchlist-limit-message" class="watchlist-limit-message"></p>
+    <div class="preorder-dialog-actions"><button class="watchlist-limit-close preorder-confirm" type="button">OK</button></div>
+  </dialog>
   <dialog class="signout-dialog preorder-dialog" aria-labelledby="signout-title" aria-describedby="signout-description">
     <h2 id="signout-title">Finish your Dramify experience?</h2>
-    <p id="signout-description">You can finish when your coin balance is 0. Your responses will be saved before your Finish Code is shown.</p>
+    <p id="signout-description">Please select exactly 6 dramas for My Watchlist. Your responses will be saved before your Finish Code is shown.</p>
     <p class="signout-error" role="alert" hidden></p>
     <div class="preorder-dialog-actions"><button class="signout-dismiss" type="button">Keep exploring</button><button class="signout-confirm preorder-confirm" type="button">Confirm</button></div>
   </dialog>
@@ -123,7 +129,7 @@
       <label for="profile-gender">Gender</label><select id="profile-gender" required><option value="" disabled>Select your gender</option><option value="female">Female</option><option value="male">Male</option><option value="non-binary">Non-binary</option><option value="self-described">Another identity</option><option value="prefer-not-to-say">Prefer not to say</option></select>
       <label for="profile-age">Age</label><input id="profile-age" type="number" min="1" max="120" step="1" required>
       <label for="profile-country">Country</label><input id="profile-country" type="text" autocomplete="country-name" maxlength="100" required placeholder="Your country">
-      <label for="profile-worker-id">MTurk Worker ID</label><input id="profile-worker-id" type="text" readonly aria-readonly="true">
+      <label for="profile-worker-id">Your Worker ID:</label><input id="profile-worker-id" type="text" readonly aria-readonly="true">
       <p class="profile-status" role="status" hidden></p>
       <button class="enrollment-submit" type="submit">Save changes</button>
     </form>
