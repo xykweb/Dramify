@@ -364,7 +364,7 @@ function validSurveyPage(value){return Number.isInteger(value)&&value>=0&&value<
 let surveyPage = 0;
 let surveySaving = false;
 signoutDialog.classList.add("experience-survey");
-signoutDialog.innerHTML = `<p id="signout-description">Before you finish, we would like to hear about your thoughts during the experience. Please answer the following questions based on your true thoughts.</p>
+signoutDialog.innerHTML = `<p id="signout-description">In this section, we would like to hear about your thoughts during the experience. Please answer the following questions based on your true thoughts.</p>
 <form id="experience-survey-form"><div class="survey-page"></div></form>
 <p class="signout-error" role="alert" hidden></p><div class="survey-navigation"><button type="button" class="survey-next primary-action">Next</button><button type="button" class="signout-confirm primary-action" hidden>Submit and finish</button></div>`;
 function surveyRecord() {return JSON.parse(localStorage.getItem(window.DRAMIFY_STORAGE_KEY(PARTICIPANT_STORAGE_KEY)) || "null");}
