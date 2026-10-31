@@ -5,14 +5,14 @@
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <meta name="description" content="Discover new dramas on Dramify.">
   <title>Dramify</title>
-  <link rel="stylesheet" href="style.css?v=20261101-audit43">
-  <script src="config.js?v=20261101-audit43" defer></script>
+  <link rel="stylesheet" href="style.css?v=20261101-copy44">
+  <script src="config.js?v=20261101-copy44" defer></script>
   <script src="vendor/supabase.js" defer></script>
   <script src="vendor/xlsx.full.min.js" defer></script>
   <script src="catalog.js?v=20261020-excel6" defer></script>
-  <script src="cloud.js?v=20261101-audit43" defer></script>
-  <script src="script.js?v=20261101-audit43" defer></script>
-  <script src="enrollment.js?v=20261101-audit43" defer></script>
+  <script src="cloud.js?v=20261101-copy44" defer></script>
+  <script src="script.js?v=20261101-copy44" defer></script>
+  <script src="enrollment.js?v=20261101-copy44" defer></script>
 </head>
 <body class="enrolling">
   <section class="enrollment" aria-labelledby="welcome-title">
@@ -33,13 +33,13 @@
               <li>You can click the “+” button below a series poster to add it to your Watchlist. Click the same button again to remove it.</li>
               <li>You must have exactly <strong>6 streaming series</strong> in your Watchlist to continue.</li>
               <li>You can like and save as many streaming series as you wish. These actions do not count toward your 6 watchlist selections.</li>
-              <li class="task-time-limit" hidden>You have <strong>3 minutes</strong> to make your selections. A countdown will appear in the left sidebar. It starts when you click <strong>Start exploring</strong>.</li>
+              <li class="task-time-limit" hidden>You have 3 minutes to freely explore Dramify and make your selections. Please complete your selections within the time limit; responses submitted after the timeout will be considered invalid.</li>
             </ol>
-            <p class="task-ready">If you have read and understood the instructions, please click <strong>Start exploring</strong> to enter Dramify.</p>
+            <p class="task-ready">If you have read and understood the instructions, please click <strong>Go to Dramify</strong> to enter Dramify.</p>
           </div>
         </fieldset>
         <p id="enrollment-error" role="alert" hidden></p>
-        <div class="enrollment-actions"><button id="enrollment-back" type="button" hidden>Back</button><button class="enrollment-submit" type="submit">Next</button></div>
+        <div class="enrollment-actions"><button class="enrollment-submit" type="submit">Next</button></div>
       </form>
       <noscript>Please enable JavaScript to continue to Dramify.</noscript>
     </div>
@@ -58,7 +58,7 @@
   </section>
   <div id="dramify-app" hidden>
     <div class="selection-complete-bar" role="region" aria-label="Watchlist selection complete" hidden>
-      <p role="status">You have added 6 series to your Watchlist. If you have confrim your selection, please click <strong>Next</strong> to continue.</p>
+      <p role="status">You have added 6 series to your Watchlist. If you have confirmed your selections, please click <strong>Next</strong> to continue.</p>
       <button class="selection-next" type="button">Next</button>
     </div>
   <aside class="sidebar" aria-label="Dramify navigation">
@@ -97,6 +97,6 @@
     <p id="watchlist-limit-message" class="watchlist-limit-message"></p>
     <div class="dialog-actions"><button class="watchlist-limit-close primary-action" type="button">OK</button></div>
   </dialog>
-  <section class="experience-survey" hidden aria-labelledby="signout-title"></section>
+  <section class="experience-survey" hidden aria-label="Experience questionnaire"></section>
 </body>
 </html>

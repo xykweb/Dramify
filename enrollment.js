@@ -65,15 +65,13 @@ function showEnrollmentStep(step) {
   heading.hidden=step!==1;
   document.querySelector(".enrollment-intro").innerHTML=step===1?enrollmentWelcomeCopy:"";
   document.querySelector(".enrollment-intro").hidden=step!==1;
-  document.querySelector("#enrollment-back").hidden = step === 1;
-  document.querySelector(".enrollment-submit").textContent = step===1?"Next":"Start exploring";
+  document.querySelector(".enrollment-submit").textContent = step===1?"Next":"Go to Dramify";
   document.querySelector(".task-time-limit").hidden = !["2006","2008"].includes(assignedCode);
   enrollmentError.hidden=true;
   if(step===1)heading.focus();else document.querySelector(".enrollment-submit").focus();
 }
 const enrollmentWelcomeHeading=document.querySelector("#welcome-title").textContent;
 const enrollmentWelcomeCopy=document.querySelector(".enrollment-intro").innerHTML;
-document.querySelector("#enrollment-back").addEventListener("click",()=>showEnrollmentStep(enrollmentStep===4?1:Math.max(1,enrollmentStep-1)));
 try {prepareAssignment();} catch(error) {showEnrollmentError("Please allow browser storage to continue.");}
 
 function isValidParticipant(value) {
@@ -349,7 +347,7 @@ const surveyPages = [
     ],
     [
       "drama_liking",
-      "How much do you like watching AI-generated streaming series?",
+      "How much do you like watching AI-generated dramas?",
       "Not at all",
       "Very much"
     ],
@@ -366,8 +364,7 @@ function validSurveyPage(value){return Number.isInteger(value)&&value>=0&&value<
 let surveyPage = 0;
 let surveySaving = false;
 signoutDialog.classList.add("experience-survey");
-signoutDialog.innerHTML = `<div class="survey-heading"><h2 id="signout-title">Thank you for trying Dramify!</h2></div>
-<p id="signout-description">Before you finish, we would like to hear about your thoughts during the experience. Please answer the following questions based on your true thoughts.</p>
+signoutDialog.innerHTML = `<p id="signout-description">Before you finish, we would like to hear about your thoughts during the experience. Please answer the following questions based on your true thoughts.</p>
 <form id="experience-survey-form"><div class="survey-page"></div></form>
 <p class="signout-error" role="alert" hidden></p><div class="survey-navigation"><button type="button" class="survey-next primary-action">Next</button><button type="button" class="signout-confirm primary-action" hidden>Submit and finish</button></div>`;
 function surveyRecord() {return JSON.parse(localStorage.getItem(window.DRAMIFY_STORAGE_KEY(PARTICIPANT_STORAGE_KEY)) || "null");}
@@ -379,7 +376,6 @@ function saveSurvey(patch) {
   window.DramifyCloud.changed();
 }
 function renderSurvey() {
-  signoutDialog.querySelector(".survey-heading").hidden=surveyPage!==0;
   signoutDialog.querySelector("#signout-description").hidden=surveyPage!==0;
   const data=surveyRecord()?.postSurvey || {};
   const area=signoutDialog.querySelector(".survey-page");area.replaceChildren();

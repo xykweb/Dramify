@@ -281,3 +281,8 @@ section.experience-survey{position:static;display:block;inset:auto;width:100%;ma
 .selection-complete-bar .selection-next{min-width:148px;min-height:52px;font-size:18px;background:#b91f5a}
 .selection-complete-bar .selection-next:hover{background:#9f184b}
 main{padding-bottom:220px}
+
+.enrollment #welcome-title{text-align:center}
+.selection-complete-bar{background:#fff;border:2px solid #d47a9e;border-bottom:0}
+.selection-complete-bar p{font-size:20px;line-height:1.6;font-weight:700;color:#000}
+.experience-survey #signout-description{font-size:20px;font-weight:700;line-height:1.7;color:#000}
