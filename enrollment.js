@@ -349,7 +349,7 @@ const surveyPages = [
     ],
     [
       "drama_liking",
-      "How much do you like watching AI-generated dramas?",
+      "How much do you like watching AI-generated streaming series?",
       "Not at all",
       "Very much"
     ],
