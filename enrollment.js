@@ -47,12 +47,15 @@ function showEnrollmentStep(step) {
     document.querySelector(`#${id}`).disabled=step!==number;
   }
   const heading=document.querySelector("#welcome-title");
-  heading.textContent=step===1?enrollmentWelcomeHeading:"Your task";
-  document.querySelector(".enrollment-intro").innerHTML=step===1?enrollmentWelcomeCopy:"Please read the instructions below before you begin.";
+  heading.textContent=step===1?enrollmentWelcomeHeading:"";
+  heading.hidden=step!==1;
+  document.querySelector(".enrollment-intro").innerHTML=step===1?enrollmentWelcomeCopy:"";
+  document.querySelector(".enrollment-intro").hidden=step!==1;
   document.querySelector("#enrollment-back").hidden = step === 1;
   document.querySelector(".enrollment-submit").textContent = step===1?"Next":"Start exploring";
   document.querySelector(".task-time-limit").hidden = !["2006","2008"].includes(assignedCode);
-  enrollmentError.hidden=true;heading.focus();
+  enrollmentError.hidden=true;
+  if(step===1)heading.focus();else document.querySelector(".enrollment-submit").focus();
 }
 const enrollmentWelcomeHeading=document.querySelector("#welcome-title").textContent;
 const enrollmentWelcomeCopy=document.querySelector(".enrollment-intro").innerHTML;
