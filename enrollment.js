@@ -70,7 +70,7 @@ function showEnrollmentStep(step) {
   enrollmentError.hidden=true;heading.focus();
 }
 const enrollmentWelcomeCopy=document.querySelector(".enrollment-intro").innerHTML;
-document.querySelector("#enrollment-back").addEventListener("click",()=>showEnrollmentStep(enrollmentStep===4?2:Math.max(1,enrollmentStep-1)));
+document.querySelector("#enrollment-back").addEventListener("click",()=>showEnrollmentStep(enrollmentStep===4?1:Math.max(1,enrollmentStep-1)));
 try {prepareVerification();} catch(error) {showEnrollmentError("Please allow browser storage to continue.");}
 
 function isValidParticipant(value) {
@@ -183,11 +183,12 @@ participantForm.addEventListener("submit", event => {
   if (enrollmentStep === 1) {
     if (!hasValidWorkerId()) return;
     const completedIds=JSON.parse(localStorage.getItem("dramify.completedConnectIds.v1") || "[]");
-    if(completedIds.includes(workerIdInput.value.trim())) {showEnrollmentError("You have already completed this study. Please return to CloudResearch Connect.");return;}
+    if(localStorage.getItem("dramify.deviceCompleted.v1") || completedIds.includes(workerIdInput.value.trim())) {showEnrollmentError("You have already completed this study. Please return to CloudResearch Connect.");return;}
     if (returningParticipant?.mturkWorkerId && returningParticipant.mturkWorkerId !== workerIdInput.value.trim()) {
       showEnrollmentError("Please use the Connect ID for your saved session, or start in a new private window.");return;
     }
-    showEnrollmentStep(2);return;
+    accessCodeInput.value=verificationCode;
+    if(localStorage.getItem("dramify.deviceCompleted.v1")){showEnrollmentError("This browser has already completed this study. Please return to Connect.");return;}
   }
   if (enrollmentStep === 2) {
     if (!hasValidAccessCode()) return;
@@ -349,9 +350,9 @@ function showCompletionScreen() {
   document.querySelector(".copy-code-status").hidden=!showCode;
   document.querySelector(".completion-code").textContent = completion.completionCode || "Preview complete";
   document.querySelector(".copy-key-code").hidden = !showCode;
-  document.querySelector(".completion-card p").textContent = completion.redirectUrl ? "Your responses have been saved. Return to CloudResearch Connect to submit your participation." : completion.completionCode ? "Your responses have been saved. Copy the completion code below and return to CloudResearch Connect to submit it." : "Your responses have been saved. This is a preview; the CloudResearch Connect completion link has not been configured yet.";
+  document.querySelector(".completion-card p").textContent = completion.redirectUrl ? "Your responses have been saved. You will now be redirected to CloudResearch Connect to submit your participation." : completion.completionCode ? "Your responses have been saved. Copy the completion code below and return to CloudResearch Connect to submit it." : "Your responses have been saved. This is a preview; the CloudResearch Connect completion link has not been configured yet.";
   document.querySelector(".return-connect")?.remove();
-  if(completion.redirectUrl) {const link=document.createElement("a");link.href=completion.redirectUrl;link.textContent="Return to Connect";link.className="enrollment-submit return-connect";document.querySelector(".completion-card").append(link);}
+  if(completion.redirectUrl) {const link=document.createElement("a");link.href=completion.redirectUrl;link.textContent="Return to Connect";link.className="enrollment-submit return-connect";document.querySelector(".completion-card").append(link);setTimeout(()=>window.location.assign(completion.redirectUrl),2500);}
   document.body.classList.add("enrolling");
   document.querySelector("#completion-title").focus();
 }
@@ -484,7 +485,7 @@ const surveyPages = [
 let surveyPage = 0;
 let surveySaving = false;
 signoutDialog.classList.add("experience-survey");
-signoutDialog.innerHTML = `<div class="survey-heading"><h2 id="signout-title">Thank you for trying Dramify!</h2><button type="button" class="signout-dismiss" aria-label="Close questionnaire">×</button></div>
+signoutDialog.innerHTML = `<div class="survey-heading"><h2 id="signout-title">Thank you for trying Dramify!</h2><button type="button" class="signout-dismiss" hidden disabled aria-label="Close questionnaire">×</button></div>
 <p id="signout-description">Before you finish, we would like to hear about your thoughts during the experience. Please answer the following questions based on the selections you just made.</p>
 <form id="experience-survey-form"><div class="survey-page"></div></form>
 <p class="signout-error" role="alert" hidden></p><div class="survey-navigation"><button type="button" class="survey-back">Back</button><button type="button" class="survey-next preorder-confirm">Next</button><button type="button" class="signout-confirm preorder-confirm" hidden>Submit and finish</button></div>`;
@@ -529,10 +530,10 @@ function renderSurvey() {
     const comment=form.querySelector("#survey-comment");comment.value=data.comment || "";
     comment.addEventListener("input",()=>saveSurvey({comment:comment.value}));area.append(form);
   }
-  signoutDialog.querySelector(".survey-back").hidden=surveyPage===0;
+  signoutDialog.querySelector(".survey-back").hidden=true;
   signoutDialog.querySelector(".survey-next").hidden=surveyPage===3;
   signoutDialog.querySelector(".signout-confirm").hidden=surveyPage!==3;
-  signoutDialog.querySelector(".signout-confirm").textContent="Next";
+  signoutDialog.querySelector(".signout-confirm").textContent="Submit";
   window.scrollTo(0,0);
 }
 function surveyError(text) {const error=document.querySelector(".signout-error");error.textContent=text;error.hidden=false;}
@@ -545,7 +546,7 @@ signoutDialog.querySelector(".survey-next").addEventListener("click",()=>{
   surveyPage++;saveSurvey({page:surveyPage});renderSurvey();
 });
 signoutDialog.querySelector(".survey-back").addEventListener("click",()=>{if(!surveySaving){surveyPage--;saveSurvey({page:surveyPage});renderSurvey();}});
-signoutDialog.addEventListener("cancel",event=>{if(surveySaving)event.preventDefault();});
+signoutDialog.addEventListener("cancel",event=>{event.preventDefault();});
 document.querySelector("#experience-survey-form").addEventListener("submit",event=>event.preventDefault());
 function canFinishExperience() {
   const message = document.querySelector(".signout-error");
@@ -570,7 +571,7 @@ document.querySelector(".sign-out").addEventListener("click", () => {
   document.querySelector(".signout-confirm").disabled = !canFinishExperience();
   if(!canFinishExperience()) {window.alert(document.querySelector(".signout-error").textContent);return;}
   surveyPage=Math.min(3,Math.max(0,surveyRecord()?.postSurvey?.page || 0));
-  window.DramifyCloud.changed();if(!window.confirm("Finish your selections? Click OK to confirm and continue to the questionnaire."))return;
+  window.DramifyCloud.changed();
   saveSurvey({inProgress:true});renderSurvey();openSurveyPage();
 });
 document.querySelector(".signout-dismiss").addEventListener("click", () => {if(!surveySaving){saveSurvey({inProgress:false});closeSurveyPage();}});
@@ -592,7 +593,7 @@ document.querySelector(".signout-confirm").addEventListener("click", async () =>
     message.textContent = "Your responses have not synced yet. Please check your connection and try again. Your data is still saved on this device.";
     message.hidden = false;
     confirmButton.disabled = false;
-    confirmButton.textContent = "Next";
+    confirmButton.textContent = "Submit";
     surveySaving=false;
     signoutDialog.querySelector(".survey-back").disabled=false;
     return;
@@ -610,6 +611,7 @@ document.querySelector(".signout-confirm").addEventListener("click", async () =>
     sessionStorage.removeItem(COMPLETION_SESSION_KEY);
     const completedIds=JSON.parse(localStorage.getItem("dramify.completedConnectIds.v1") || "[]");
     localStorage.setItem("dramify.completedConnectIds.v1",JSON.stringify([...new Set([...completedIds,activeParticipant.connectId || activeParticipant.mturkWorkerId])]));
+    localStorage.setItem("dramify.deviceCompleted.v1",new Date().toISOString());
     localStorage.removeItem(PARTICIPANT_STORAGE_KEY);
     localStorage.removeItem(VERIFICATION_STORAGE_KEY);
   } catch (error) {
@@ -617,7 +619,7 @@ document.querySelector(".signout-confirm").addEventListener("click", async () =>
     message.textContent = "We could not delete your saved data. Please allow browser storage and try again.";
     message.hidden = false;
     confirmButton.disabled = false;
-    confirmButton.textContent = "Next";
+    confirmButton.textContent = "Submit";
     surveySaving=false;
     signoutDialog.querySelector(".survey-back").disabled=false;
     return;

@@ -143,3 +143,5 @@ section.experience-survey{position:static;display:block;inset:auto;width:100%;ma
 @media(max-width:700px){section.experience-survey{padding:28px 20px}.experience-survey .survey-question{padding:18px 14px}.survey-scale,.experience-survey .survey-endpoints{gap:6px}}
 
 .experience-survey .survey-page label[for]{display:block;margin:22px 0 9px;font-size:17px;font-weight:600}.experience-survey .survey-page input[type=number],.experience-survey .survey-page select{width:100%;height:48px;padding:10px 12px;border:1px solid #d9c5d0;border-radius:6px;background:white;font:inherit;color:#382a32}
+
+.enrollment .enrollment-intro,.enrollment label,.task-instructions{color:#382f35}.experience-survey .signout-dismiss,.experience-survey .survey-back{display:none!important}
