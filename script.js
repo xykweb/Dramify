@@ -132,8 +132,9 @@ function initializeDramify(participant) {
     document.querySelector(".home-promotion").hidden=currentView!=="home";
     for(const [view,button] of Object.entries(nav))button.setAttribute("aria-pressed",String(view===currentView));
     grid.hidden=false;
-    document.querySelector(".section-heading").hidden=currentView==="home";
-    const headings={home:"",watchlist:"My Watchlist",saved:"Saved",liked:"Liked"};
+    document.querySelector(".section-heading").hidden=false;
+    document.querySelector(".section-heading").classList.toggle("new-release-heading",currentView==="home");
+    const headings={home:"New Release",watchlist:"My Watchlist",saved:"Saved",liked:"Liked"};
     heading.textContent=headings[currentView]||"";
     empty.hidden=true;
     let list=displayed;

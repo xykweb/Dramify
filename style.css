@@ -277,3 +277,7 @@ main{padding-bottom:220px}
 .experience-survey #signout-description{font-size:20px;font-weight:700;line-height:1.7;color:#000}
 
 .page-content main{padding-top:24px;min-height:100vh}
+
+.section-heading.new-release-heading{display:block;margin-top:40px;margin-bottom:52px}
+.new-release-heading h1{font-size:36px;line-height:1.25;font-weight:700;letter-spacing:-.7px;color:#171717}
+.new-release-heading .heading-rule{display:block;width:240px;max-width:36%;height:3px;margin-top:22px;background:#888}
