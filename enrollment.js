@@ -365,7 +365,9 @@ const surveyPages = [
       "In making my selections, I preferred series that allow me to be mentally involved in the narrative.",
       "Strongly disagree",
       "Strongly agree"
-    ],
+    ]
+  ],
+  [
     [
       "storyline_detail",
       "In making my selections, I preferred series with detailed and well-developed storylines.",
@@ -383,7 +385,9 @@ const surveyPages = [
       "In making my selections, I preferred series with rich story content.",
       "Strongly disagree",
       "Strongly agree"
-    ],
+    ]
+  ],
+  [
     [
       "telepresence_presence",
       "In making my selections, I preferred series that make me feel as if I am really there.",
@@ -415,15 +419,15 @@ const surveyPages = [
       "Right now, I prefer to do things where I have a lot of control over what I do and when I do it.",
       "Strongly disagree",
       "Strongly agree"
-    ],
+    ]
+  ],
+  [
     [
       "pleasure",
       "To what extent were your selection preferences motivated by the pursuit of pleasure?",
       "Not at all",
       "Very much"
-    ]
-  ],
-  [
+    ],
     [
       "time_pressure",
       "How much time pressure did you feel when making your selections?",
@@ -435,7 +439,9 @@ const surveyPages = [
       "How fast did you need to make your decisions?",
       "Not at all fast",
       "Very fast"
-    ],
+    ]
+  ],
+  [
     [
       "drama_liking",
       "How much do you like watching AI-generated series?",
@@ -451,18 +457,18 @@ const surveyPages = [
   ],
   []
 ];
-function validSurveyPage(value){return Number.isInteger(value)&&value>=0&&value<=3?value:0;}
+function validSurveyPage(value){return Number.isInteger(value)&&value>=0&&value<surveyPages.length?value:0;}
 let surveyPage = 0;
 let surveySaving = false;
 signoutDialog.classList.add("experience-survey");
-signoutDialog.innerHTML = `<p id="signout-description">In this section, we would like to hear about your thoughts during the experience. Please answer the following questions based on your true thoughts.</p>
+signoutDialog.innerHTML = `<header class="survey-brand-header"><img src="assets/brand/Logo.jpg" alt="Dramify" width="186"><h1>Experience Survey</h1><span aria-hidden="true"></span></header><div class="survey-content"><p id="signout-description">In this section, we would like to hear about your thoughts during the experience. Please answer the following questions based on your true thoughts.</p>
 <form id="experience-survey-form"><div class="survey-page"></div></form>
-<p class="signout-error" role="alert" hidden></p><div class="survey-navigation"><button type="button" class="survey-next primary-action">Next</button><button type="button" class="signout-confirm primary-action" hidden>Submit and finish</button></div>`;
+<p class="signout-error" role="alert" hidden></p><div class="survey-navigation"><button type="button" class="survey-next primary-action">Next</button><button type="button" class="signout-confirm primary-action" hidden>Submit</button></div></div>`;
 function surveyRecord() {return JSON.parse(localStorage.getItem(window.DRAMIFY_STORAGE_KEY(PARTICIPANT_STORAGE_KEY)) || "null");}
 function saveSurvey(patch) {
   const record=surveyRecord();
   if (!record || record.id !== activeParticipant?.id) throw new Error("Participant changed");
-  record.postSurvey = {...record.postSurvey,...patch,version:"post-experience-v2",updatedAt:new Date().toISOString()};
+  record.postSurvey = {...record.postSurvey,...patch,version:"post-experience-v3",updatedAt:new Date().toISOString()};
   localStorage.setItem(window.DRAMIFY_STORAGE_KEY(PARTICIPANT_STORAGE_KEY),JSON.stringify(record));
   window.DramifyCloud.changed();
 }
@@ -485,7 +491,7 @@ function renderSurvey() {
     }
     field.append(legend,endpoints,scale);area.append(field);
   }
-  if(surveyPage===3) {
+  if(surveyPage===surveyPages.length-1) {
     const copy=document.createElement("p");copy.textContent="Finally, please tell us a little about yourself.";area.append(copy);
     const form=document.createElement("div");
     form.innerHTML=`<label for="survey-gender">Your gender:</label><select id="survey-gender" required><option value="">Select your gender</option><option value="male">Male</option><option value="female">Female</option><option value="nonbinary-other">Nonbinary/Other</option><option value="prefer-not-to-say">Prefer not to say</option></select>
@@ -500,8 +506,8 @@ function renderSurvey() {
     const comment=form.querySelector("#survey-comment");comment.value=data.comment || "";
     comment.addEventListener("input",()=>{try{saveSurvey({comment:comment.value});}catch(error){surveyError("We could not save your comment. Please try again.");}});area.append(form);
   }
-  signoutDialog.querySelector(".survey-next").hidden=surveyPage===3;
-  signoutDialog.querySelector(".signout-confirm").hidden=surveyPage!==3;
+  signoutDialog.querySelector(".survey-next").hidden=surveyPage===surveyPages.length-1;
+  signoutDialog.querySelector(".signout-confirm").hidden=surveyPage!==surveyPages.length-1;
   signoutDialog.querySelector(".signout-confirm").textContent="Submit";
   window.scrollTo(0,0);
 }
@@ -516,7 +522,7 @@ function surveyComplete() {
 signoutDialog.querySelector(".survey-next").addEventListener("click",()=>{
   if(!document.querySelector("#experience-survey-form").reportValidity())return;
   try {
-    const next=Math.min(3,surveyPage+1);saveSurvey({page:next});surveyPage=next;renderSurvey();
+    const next=Math.min(surveyPages.length-1,surveyPage+1);saveSurvey({page:next});surveyPage=next;renderSurvey();
   } catch(error){surveyError("We could not save your progress. Please try again.");}
 });
 signoutDialog.addEventListener("cancel",event=>{event.preventDefault();});

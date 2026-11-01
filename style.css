@@ -311,3 +311,11 @@ html.mobile-device body>.desktop-only-notice{display:grid!important;min-height:1
 .header-search input::placeholder{color:#958b93}
 .header-avatar{margin-left:auto;width:42px;height:42px;display:grid;place-items:center;flex-shrink:0;border:1px solid #e4d9df;border-radius:50%;background:#faf5f7;color:#846e7c;overflow:hidden}
 .header-avatar svg{width:29px;height:29px}
+
+section.experience-survey{max-width:none;padding:0 0 64px}
+.survey-brand-header{position:sticky;top:0;z-index:10;display:grid;grid-template-columns:186px minmax(0,1fr) 186px;align-items:center;gap:24px;min-height:92px;padding:20px 40px;background:#fff;border-bottom:1px solid #eadfe5}
+.survey-brand-header img{display:block;width:186px;height:auto}
+.survey-brand-header h1{font-size:26px;line-height:1.3;font-weight:650;letter-spacing:-.4px;text-align:center;color:#382a32}
+.survey-content{width:100%;max-width:1080px;margin:0 auto;padding:40px 56px 0}
+.survey-question{scroll-margin-top:120px}
+@media(max-width:700px){section.experience-survey{padding:0 0 40px}.survey-brand-header{grid-template-columns:110px minmax(0,1fr) 110px;gap:12px;padding:16px 20px;min-height:76px}.survey-brand-header img{width:110px}.survey-brand-header h1{font-size:20px}.survey-content{padding:28px 20px 0}}
