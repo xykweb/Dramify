@@ -5,13 +5,13 @@
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <meta name="description" content="Discover new dramas on Dramify.">
   <title>Dramify</title>
-  <link rel="stylesheet" href="style.css?v=20261101-seconds">
+  <link rel="stylesheet" href="style.css?v=20261101-header">
   <script src="config.js?v=20261101-mobile50" defer></script>
   <script src="vendor/supabase.js" defer></script>
   <script src="vendor/xlsx.full.min.js" defer></script>
   <script src="catalog.js?v=20261101-optional-metadata" defer></script>
   <script src="cloud.js?v=20261101-fullscreen46" defer></script>
-  <script src="script.js?v=20261101-banner47" defer></script>
+  <script src="script.js?v=20261101-header" defer></script>
   <script src="enrollment.js?v=20261101-seconds" defer></script>
 </head>
 <body class="enrolling">
@@ -69,6 +69,13 @@
     </footer>
   </aside>
   <div class="page-content">
+    <header class="site-header" aria-label="Dramify header">
+      <div class="header-search">
+        <svg viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.7"><circle cx="10.5" cy="10.5" r="6.5"/><path d="m16 16 5 5"/></svg>
+        <input id="drama-search" type="search" placeholder="Search Dramify" aria-label="Search series by title" autocomplete="off">
+      </div>
+      <span class="header-avatar" role="img" aria-label="User profile"><svg viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.6"><circle cx="12" cy="8" r="3.5"/><path d="M5 21v-2a7 7 0 0 1 14 0v2"/></svg></span>
+    </header>
   <main>
 
     <div class="home-promotion"><img src="assets/brand/home-banner.png" alt="New dramas on Dramify. Explore the latest dramas and find your next favorite." width="4450" height="2145"></div>

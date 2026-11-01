@@ -46,6 +46,7 @@ function initializeDramify(participant) {
   const notice = document.querySelector(".action-notice");
   const nav = {home:document.querySelector(".browse-all"),watchlist:document.querySelector(".my-watchlist-button"),liked:document.querySelector(".liked-button"),saved:document.querySelector(".watchlist-filter")};
   let currentView = "home";
+  const searchInput = document.querySelector("#drama-search");
   if (dramas.some(drama => !drama.a.title || !drama.b.title)) throw new Error("Drama content must be loaded from Excel before rendering");
   const selected = selectStimuli(participant.condition);
   const validOrder = Array.isArray(participant.dramaOrder) && participant.dramaOrder.length === 16 && new Set(participant.dramaOrder).size === 16 && participant.dramaOrder.every(id => Number.isInteger(id) && id >= 1 && id <= 16);
@@ -139,9 +140,11 @@ function initializeDramify(participant) {
     empty.hidden=true;
     let list=displayed;
     if(["watchlist","saved","liked"].includes(currentView))list=list.filter(drama=>state(record,drama)[currentView]);
+    const query=searchInput.value.trim().toLocaleLowerCase();
+    if(query)list=list.filter(drama=>drama.title.toLocaleLowerCase().includes(query));
     grid.className="drama-grid";
     grid.replaceChildren(...list.map(drama=>card(drama,record)));
-    if(!list.length){empty.hidden=false;empty.textContent=currentView==="saved"?"No saved dramas yet. Save a drama from Dramify.":`No ${currentView} dramas yet.`;}
+    if(!list.length){empty.hidden=false;empty.textContent=query?"No series match your search.":currentView==="saved"?"No saved dramas yet. Save a drama from Dramify.":`No ${currentView} dramas yet.`;}
   }
   function route() {
     const route=window.location.hash.slice(1)||"home";
@@ -152,6 +155,7 @@ function initializeDramify(participant) {
   function go(view) {if(window.location.hash===`#${view}`)return;window.location.hash=view;}
   for(const [view,button] of Object.entries(nav))button.addEventListener("click",()=>go(view));
   document.querySelector(".watchlist-limit-close").addEventListener("click",()=>document.querySelector(".watchlist-limit-dialog").close());
+  searchInput.addEventListener("input",render);
   window.addEventListener("hashchange",route);
   route();
 }
