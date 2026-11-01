@@ -1,3 +1,5 @@
+(() => {
+if (window.DRAMIFY_MOBILE_BLOCKED) return;
 "use strict";
 
 // The participant record and assignment are saved together in one local write.
@@ -578,3 +580,5 @@ document.querySelector(".copy-key-code").addEventListener("click", async () => {
 
 
 if(window.DRAMIFY_CONTEXT.participantId && !workerIdInput.value)workerIdInput.value=window.DRAMIFY_CONTEXT.participantId;
+
+})();

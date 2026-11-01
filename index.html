@@ -5,16 +5,23 @@
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <meta name="description" content="Discover new dramas on Dramify.">
   <title>Dramify</title>
-  <link rel="stylesheet" href="style.css?v=20261101-sidebar49">
-  <script src="config.js?v=20261101-fullscreen46" defer></script>
+  <link rel="stylesheet" href="style.css?v=20261101-mobile50">
+  <script src="config.js?v=20261101-mobile50" defer></script>
   <script src="vendor/supabase.js" defer></script>
   <script src="vendor/xlsx.full.min.js" defer></script>
   <script src="catalog.js?v=20261020-excel6" defer></script>
   <script src="cloud.js?v=20261101-fullscreen46" defer></script>
   <script src="script.js?v=20261101-banner47" defer></script>
-  <script src="enrollment.js?v=20261101-copy48" defer></script>
+  <script src="enrollment.js?v=20261101-mobile50" defer></script>
 </head>
 <body class="enrolling">
+  <section class="desktop-only-notice" aria-labelledby="desktop-only-title">
+    <div class="desktop-only-card">
+      <img src="assets/brand/Logo.jpg" alt="Dramify" class="desktop-only-logo" width="194">
+      <h1 id="desktop-only-title">Please use a desktop or laptop computer</h1>
+      <p>Sorry, this survey is not available on mobile devices. Please open this link on a desktop or laptop computer to participate.</p>
+    </div>
+  </section>
   <section class="enrollment" aria-labelledby="welcome-title">
     <div class="enrollment-card">
       <img class="enrollment-logo" src="assets/brand/Logo.jpg" alt="Dramify" width="186" height="68">

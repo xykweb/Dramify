@@ -1,5 +1,11 @@
 "use strict";
 
+// Detect phones/tablets by device signals rather than desktop window width.
+window.DRAMIFY_MOBILE_BLOCKED = /Android|iPhone|iPad|iPod|IEMobile|Opera Mini/i.test(navigator.userAgent)
+  || (navigator.platform === "MacIntel" && navigator.maxTouchPoints > 1)
+  || navigator.userAgentData?.mobile === true;
+if (window.DRAMIFY_MOBILE_BLOCKED) document.documentElement.classList.add("mobile-device");
+
 // Change these 4-digit codes, then redeploy to update access and assignment.
 // This is a client-side gate, not server-enforced authentication.
 window.DRAMIFY_CONFIG = Object.freeze({

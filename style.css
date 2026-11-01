@@ -281,3 +281,16 @@ main{padding-bottom:220px}
 .section-heading.new-release-heading{display:block;margin-top:40px;margin-bottom:52px}
 .new-release-heading h1{font-size:36px;line-height:1.25;font-weight:700;letter-spacing:-.7px;color:#171717}
 .new-release-heading .heading-rule{display:block;width:240px;max-width:36%;height:3px;margin-top:22px;background:#888}
+
+/* Let the homepage banner span the full content pane beside the sidebar. */
+.page-content main .home-promotion{width:calc(100vw - 280px);max-width:none;margin-left:calc((100% - (100vw - 280px)) / 2);margin-right:0}
+.page-content main .home-promotion img{border-radius:0}
+
+.desktop-only-notice{display:none}
+html.mobile-device body{min-width:0;margin:0;background:#faf7f8}
+html.mobile-device body>*{display:none!important}
+html.mobile-device body>.desktop-only-notice{display:grid!important;min-height:100vh;min-height:100svh;place-items:center;padding:28px 20px;background:radial-gradient(ellipse at 85% 15%,#f9e6ed,transparent 65%)}
+.desktop-only-card{width:100%;max-width:520px;padding:36px 26px 40px;border:1px solid #ecdae3;border-radius:18px;background:white;box-shadow:0 14px 48px #6f2a4910;text-align:center}
+.desktop-only-logo{display:block;width:194px;max-width:70%;height:auto;margin:0 auto 30px}
+.desktop-only-card h1{font-size:25px;line-height:1.35;font-weight:700;letter-spacing:-.4px;color:#292329;margin:0 0 18px}
+.desktop-only-card p{font-size:17px;line-height:1.75;color:#584c54;margin:0}
