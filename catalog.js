@@ -33,9 +33,20 @@ window.DramifyContent = (() => {
         if (!window.XLSX?.read) throw new Error("Excel reader is unavailable.");
         const url = new URL("content/dramas.xlsx", base);
         url.searchParams.set("updated", String(Date.now()));
-        const response = await fetch(url, {cache:"no-store"});
-        if (!response.ok) throw new Error(`Content workbook could not be loaded (HTTP ${response.status}).`);
-        const workbook = window.XLSX.read(await response.arrayBuffer(), {type:"array", cellHTML:false, cellFormula:false});
+        let bytes;
+        for(let attempt=0;attempt<2;attempt++) {
+          const controller=new AbortController();
+          const timeout=setTimeout(()=>controller.abort(),12000);
+          try {
+            const response=await fetch(url,{cache:"no-store",signal:controller.signal});
+            if(!response.ok)throw new Error(`Content workbook could not be loaded (HTTP ${response.status}).`);
+            bytes=await response.arrayBuffer();
+            break;
+          } catch(error) {
+            if(attempt===1 || /HTTP 4\d\d/.test(error.message))throw error;
+          } finally {clearTimeout(timeout);}
+        }
+        const workbook = window.XLSX.read(bytes, {type:"array", cellHTML:false, cellFormula:false});
         const worksheet = workbook.Sheets[workbook.SheetNames[0]];
         const rows = window.XLSX.utils.sheet_to_json(worksheet, {header:1, defval:"", blankrows:false});
         return validateRows(rows);

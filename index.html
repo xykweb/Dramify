@@ -5,16 +5,62 @@
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <meta name="description" content="Discover new dramas on Dramify.">
   <title>Dramify</title>
+  <script>
+  (function () {
+    var ready=false, failed=false, slowTimer;
+    function panel(message, blocking) {
+      function show() {
+        var box=document.getElementById('connection-help');
+        if(!box)return;
+        document.getElementById('connection-help-message').textContent=message;
+        box.hidden=false;
+        if(blocking){failed=true;var button=document.querySelector('.enrollment-submit');if(button)button.disabled=true;}
+      }
+      if(document.body)show();else document.addEventListener('DOMContentLoaded',show,{once:true});
+    }
+    function describe(error, context) {
+      var text=String(error && error.message || error || '').toLowerCase();
+      if(navigator.onLine===false)return 'Your device appears to be offline. Please reconnect to the internet and try again.';
+      if(error && error.name==='AbortError' || /timed out|timeout|failed to fetch|network|load failed|fetch failed/.test(text))return 'The connection '+(context==='content'?'to the series content':'to the study server')+' failed or took too long. Please check your connection or try another network, then try again.';
+      if(/already completed|already has a study assignment|duplicate key/.test(text))return 'This Connect ID already has a completed response or an existing study session. Please contact the researcher if you believe this is an error.';
+      if(/anonymous.*disabled|signup.*disabled|permission|row.level|policy|function.*not.*found|schema cache|invalid api key|supabase client unavailable/.test(text))return 'The study server is not ready or could not authorize this session. Please contact the researcher. Your answers have not been submitted.';
+      if(context==='content')return 'The series content could not be loaded. A required file may be missing or incorrectly formatted. Please refresh once; if this continues, contact the researcher.';
+      return 'We could not save or prepare your study session. Please try again. If this continues, contact the researcher and include a screenshot of this message.';
+    }
+    window.DramifySupport={
+      ready:function(){ready=true;clearTimeout(slowTimer);if(!failed)document.getElementById('connection-help').hidden=true;else {var button=document.querySelector('.enrollment-submit');if(button)button.disabled=true;}},
+      describe:describe,
+      fatal:function(){clearTimeout(slowTimer);panel('Dramify could not start because a required website file failed to load or your browser could not run it. Please reload this page. If this continues, use an up-to-date desktop Chrome, Edge, Firefox or Safari browser, or contact the researcher.',true);}
+    };
+    window.addEventListener('error',function(event){
+      var target=event.target;
+      if(target && (target.tagName==='SCRIPT' || target.tagName==='LINK'))window.DramifySupport.fatal();
+      else if(!ready && event.filename && /\/(config|catalog|cloud|script|enrollment)\.js/.test(event.filename))window.DramifySupport.fatal();
+    },true);
+    window.addEventListener('offline',function(){panel('Your device appears to be offline. Your current answers remain on this device. Reconnect before submitting; please keep this page open.',false);});
+    window.addEventListener('online',function(){if(ready && !failed)document.getElementById('connection-help').hidden=true;});
+    slowTimer=setTimeout(function(){if(!ready)panel('Dramify is taking longer than expected to load. Please check your connection. You can reload this page if it does not finish loading.',false);},15000);
+    document.addEventListener('DOMContentLoaded',function(){
+      document.getElementById('connection-help-reload').addEventListener('click',function(){window.location.reload();});
+      if(!window.Promise || !window.fetch || !window.AbortController || !window.crypto || !window.crypto.getRandomValues)window.DramifySupport.fatal();
+      document.addEventListener('submit',function(event){if(!ready || failed){event.preventDefault();event.stopImmediatePropagation();}},true);
+    });
+  })();
+  </script>
   <link rel="stylesheet" href="style.css?v=20261102-survey7">
   <script src="config.js?v=20261101-mobile50" defer></script>
   <script src="vendor/supabase.js" defer></script>
   <script src="vendor/xlsx.full.min.js" defer></script>
-  <script src="catalog.js?v=20261101-optional-metadata" defer></script>
-  <script src="cloud.js?v=20261101-fullscreen46" defer></script>
-  <script src="script.js?v=20261101-header" defer></script>
-  <script src="enrollment.js?v=20261102-survey7" defer></script>
+  <script src="catalog.js?v=20261102-reliability" defer></script>
+  <script src="cloud.js?v=20261102-reliability" defer></script>
+  <script src="script.js?v=20261102-reliability" defer></script>
+  <script src="enrollment.js?v=20261102-timer90" defer></script>
 </head>
 <body class="enrolling">
+  <section id="connection-help" role="alert" hidden style="max-width:820px;margin:24px auto;padding:20px 24px;border:1px solid #d7a0b6;border-radius:10px;background:#fff8fb;color:#382a32;font:16px/1.6 Arial,sans-serif">
+    <strong>Connection help</strong><p id="connection-help-message"></p>
+    <button id="connection-help-reload" type="button" style="padding:10px 20px;border:0;border-radius:5px;background:#b5205b;color:#fff;cursor:pointer">Reload page</button>
+  </section>
   <section class="desktop-only-notice" aria-labelledby="desktop-only-title">
     <div class="desktop-only-card">
       <img src="assets/brand/Logo.jpg" alt="Dramify" class="desktop-only-logo" width="194">
@@ -37,16 +83,17 @@
             <p>In the next section, you will be redirected to the Dramify website, where you will see <strong>16 newly released AI-generated streaming series</strong>. Please review the list and select exactly <strong>6 series</strong> that you would like to add to your watchlist.</p>
             <p class="task-notes-heading"><strong>Notes:</strong></p>
             <ol class="task-notes">
-              <li>You can click the <strong>“+” button</strong> below each series poster to add it to your Watchlist, and click again to remove it.</li>
+              <li>Click the <strong>“+” button</strong> below a series poster to add that series to your Watchlist. The “+” will change to a <strong>check mark (✓)</strong>. Click the check mark to remove the series from your Watchlist.</li>
               <li>You must have exactly <strong>6 series</strong> in your Watchlist to continue.</li>
-              <li>You can like and save as many series as you wish.</li>
-              <li class="task-time-limit" hidden>The recommended time to make your selections is <strong>120 seconds</strong>. However, you may take as long as you need to complete the task, and your response time will not affect your payment.</li>
+              <li>Click the <strong>heart-shaped button</strong> below a poster to <strong>Like</strong> a series, indicating that you like it. Click the <strong>bookmark-shaped button</strong> to <strong>Save</strong> a series, so you can easily find it again in the Saved section. Click either button again to undo that action. You may like and save as many series as you wish. <strong>Likes and saves do not count toward your 6 Watchlist selections.</strong></li>
+              <li>We would like to understand your preferences for these series. There are <strong>no right or wrong answers</strong>, so please make your selections based on your genuine feelings. Afterwards, we will ask you some questions about your thoughts when making these selections.</li>
+              <li class="task-time-limit" hidden>The recommended time to make your selections is <strong>90 seconds</strong>. A countdown timer will appear in the left sidebar to help you keep track of the time remaining. However, you may take as long as you need to complete the task, and your response time will not affect your payment.</li>
             </ol>
             <p class="task-ready">If you have read and agreed to the instructions, please click <strong>Next</strong> to enter Dramify!</p>
           </div>
         </fieldset>
         <p id="enrollment-error" role="alert" hidden></p>
-        <div class="enrollment-actions"><button class="enrollment-submit" type="submit">Next</button></div>
+        <div class="enrollment-actions"><button class="enrollment-submit" type="submit" disabled>Next</button></div>
       </form>
       <noscript>Please enable JavaScript to continue to Dramify.</noscript>
     </div>
@@ -64,7 +111,7 @@
       <button class="liked-button" type="button" aria-pressed="false"><svg aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><path d="M20.8 4.6a5.5 5.5 0 0 0-7.8 0L12 5.7l-1.1-1.1a5.5 5.5 0 0 0-7.8 7.8L12 21l8.8-8.6a5.5 5.5 0 0 0 0-7.8Z"/></svg>Liked</button>
       <button class="watchlist-filter" type="button" aria-pressed="false"><svg aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><path d="M6 3h12v19l-6-4-6 4V3Z"/></svg>Saved</button>
     </nav>
-      <div class="stay-timer" role="timer" hidden aria-label="Time Remaining (in seconds)"><svg aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><circle cx="12" cy="14" r="8"/><path d="M9 2h6M12 2v4M18 6l2-2M12 9v5l3 2"/></svg><span>Time Remaining (in seconds)</span><span class="stay-timer-value">120.00</span></div>
+      <div class="stay-timer" role="timer" hidden aria-label="Time Remaining (in seconds)"><svg aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><circle cx="12" cy="14" r="8"/><path d="M9 2h6M12 2v4M18 6l2-2M12 9v5l3 2"/></svg><span>Time Remaining (in seconds)</span><span class="stay-timer-value">90.00</span></div>
     <footer class="sidebar-footer" aria-label="Information">
     </footer>
   </aside>

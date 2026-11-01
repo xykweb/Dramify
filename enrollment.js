@@ -1,5 +1,5 @@
 (async () => {
-if (window.DRAMIFY_MOBILE_BLOCKED) return;
+if (window.DRAMIFY_MOBILE_BLOCKED) {window.DramifySupport.ready();return;}
 "use strict";
 
 // The participant record and assignment are saved together in one local write.
@@ -77,6 +77,7 @@ const ASSIGNMENT_STORAGE_KEY = "dramify.assignment.v1";
 if(!await acquireResponseLock()) {
   showEnrollmentError("Dramify is already open in another tab. Please continue there or close it and try again.");
   document.querySelector(".enrollment-submit").disabled=true;
+  window.DramifySupport.ready();
   return;
 }
 try {
@@ -93,6 +94,7 @@ try {
 } catch(error) {
   showEnrollmentError("Please allow browser storage, then refresh this page to continue.");
   document.querySelector(".enrollment-submit").disabled=true;
+  window.DramifySupport.ready();
   return;
 }
 let assignedCode = null;
@@ -101,7 +103,7 @@ function prepareAssignment() {
   const prior=saved?.accessCode || localStorage.getItem(window.DRAMIFY_STORAGE_KEY(ASSIGNMENT_STORAGE_KEY));
   const codes=Object.keys(accessCodes);
   const random=new Uint32Array(1);crypto.getRandomValues(random);
-  assignedCode=Object.hasOwn(accessCodes,prior)?prior:codes[Math.floor(random[0]/4294967296*codes.length)];
+  assignedCode=Object.prototype.hasOwnProperty.call(accessCodes,prior)?prior:codes[Math.floor(random[0]/4294967296*codes.length)];
   localStorage.setItem(window.DRAMIFY_STORAGE_KEY(ASSIGNMENT_STORAGE_KEY),assignedCode);
 }
 const workerIdInput = document.querySelector("#participant-worker-id");
@@ -157,7 +159,7 @@ async function enterDramify(participant, code) {
     if(!siteStarted){releaseResponseLock?.();releaseResponseLock=null;}
     showEnrollmentError(location.protocol === "file:"
       ? "Please open this website using 启动网站.command in the Dramify folder, then try again."
-      : "We could not load the drama content. Please check the Excel file and your connection, then try again.");
+      : window.DramifySupport.describe(error,"content"));
     console.warn("Dramify content:", error.message);
   } finally {
     siteStarting = false;
@@ -196,7 +198,7 @@ function showDramify(participant, code) {
     const timerValue = document.querySelector(".stay-timer-value");
     const updateStayTimer = () => {
       if (!activeParticipant) return;
-      const remaining = Math.max(0, 120 - window.DramifyCloud.getDurationSeconds());
+      const remaining = Math.max(0, 90 - window.DramifyCloud.getDurationSeconds());
       timerValue.textContent = formatStayDuration(remaining);
       stayTimer.classList.toggle("time-expired", remaining === 0);
       stayTimerFrame = requestAnimationFrame(updateStayTimer);
@@ -297,7 +299,7 @@ participantForm.addEventListener("submit", async event => {
     localStorage.setItem(window.DRAMIFY_STORAGE_KEY(ASSIGNMENT_STORAGE_KEY),assignedCode);
     showEnrollmentStep(4);
   } catch(error) {
-    showEnrollmentError("We could not prepare your study session. Please check your connection and try again.");
+    showEnrollmentError(window.DramifySupport.describe(error,"session"));
     console.warn("Dramify assignment:",error.message);
   } finally {clearTimeout(connectionNotice);siteStarting=false;button.disabled=false;if(enrollmentStep===1)button.textContent="Next";}
   } catch(error) {
@@ -570,7 +572,7 @@ document.querySelector(".signout-confirm").addEventListener("click", async () =>
     await window.DramifyCloud.complete();
   } catch (error) {
     const message = document.querySelector(".signout-error");
-    message.textContent = "Your responses have not synced yet. Please check your connection and try again. Your data is still saved on this device.";
+    message.textContent = "Your responses have not synced yet. " + window.DramifySupport.describe(error,"submit") + " Your data is still saved on this device. Please keep this page open and click Submit again to retry.";
     message.hidden = false;
     confirmButton.disabled = false;
     confirmButton.textContent = "Submit";
@@ -624,4 +626,6 @@ document.querySelector(".copy-key-code").addEventListener("click", async () => {
 
 if(window.DRAMIFY_CONTEXT.participantId && !workerIdInput.value)workerIdInput.value=window.DRAMIFY_CONTEXT.participantId;
 
-})();
+document.querySelector(".enrollment-submit").disabled=false;
+window.DramifySupport.ready();
+})().catch(function(error){console.warn("Dramify startup:",error);window.DramifySupport.fatal();});

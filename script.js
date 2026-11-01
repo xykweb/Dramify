@@ -149,7 +149,7 @@ function initializeDramify(participant) {
   function route() {
     const route=window.location.hash.slice(1)||"home";
     notice.hidden=true;
-    currentView=Object.hasOwn(nav,route)?route:"home";
+    currentView=Object.prototype.hasOwnProperty.call(nav,route)?route:"home";
     render();window.scrollTo({top:0,behavior:"auto"});
   }
   function go(view) {if(window.location.hash===`#${view}`)return;window.location.hash=view;}

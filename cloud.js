@@ -120,6 +120,15 @@ window.DramifyCloud = (() => {
       authReady = (async () => {
         if (!window.supabase?.createClient) throw new Error("Supabase client unavailable");
         if (!client) client = window.supabase.createClient(window.DRAMIFY_CONFIG.supabase.url, window.DRAMIFY_CONFIG.supabase.publishableKey, {
+          global:{fetch:async (input,init={})=>{
+            const controller=new AbortController();
+            const timeout=setTimeout(()=>controller.abort(),20000);
+            const parent=init.signal;
+            const abort=()=>controller.abort();
+            if(parent){if(parent.aborted)abort();else parent.addEventListener("abort",abort,{once:true});}
+            try {return await fetch(input,{...init,signal:controller.signal});}
+            finally {clearTimeout(timeout);if(parent)parent.removeEventListener("abort",abort);}
+          }},
           auth:{storageKey:window.DRAMIFY_STORAGE_KEY(authStorageKey), persistSession:true, autoRefreshToken:true, detectSessionInUrl:false}
         });
         const record = readParticipant();
@@ -156,7 +165,7 @@ window.DramifyCloud = (() => {
     await ensureAuth();
     const {data,error}=await client.rpc("dramify_allocate",{p_response_id:participant.id,p_connect_id:participant.connectId});
     if(error)throw error;
-    if(!Object.hasOwn(window.DRAMIFY_CONFIG.accessCodes,data))throw new Error("Invalid server assignment");
+    if(!Object.prototype.hasOwnProperty.call(window.DRAMIFY_CONFIG.accessCodes,data))throw new Error("Invalid server assignment");
     const record=readParticipant();
     record.accessCode=data;record.condition=window.DRAMIFY_CONFIG.accessCodes[data];record.allocationMethod="server-balanced-v1";
     localStorage.setItem(window.DRAMIFY_STORAGE_KEY(profileKey),JSON.stringify(record));
