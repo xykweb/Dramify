@@ -5,6 +5,42 @@
 const PARTICIPANT_STORAGE_KEY = "dramify.participant.v1";
 const participantForm = document.querySelector("#enrollment-form");
 const enrollmentError = document.querySelector("#enrollment-error");
+// Keep completion functional even when the editable HTML omits its optional template.
+if(!document.querySelector(".completion-screen")) {
+  const screen=document.createElement("section");screen.className="completion-screen";screen.hidden=true;screen.setAttribute("aria-labelledby","completion-title");
+  screen.innerHTML=`<div class="enrollment-card completion-card"><h1 id="completion-title" tabindex="-1">Thank you! You have completed the Dramify experience.</h1><p></p><p class="completion-label">Completion code</p><div class="completion-code"></div><button class="copy-key-code enrollment-submit" type="button">Copy completion code</button><p class="copy-code-status" role="status"></p></div>`;
+  document.body.append(screen);
+}
+
+let fullscreenState={requested:false,entered:false,exitedEarly:false,events:[]};
+try {fullscreenState={...fullscreenState,...JSON.parse(localStorage.getItem(window.DRAMIFY_STORAGE_KEY(PARTICIPANT_STORAGE_KEY)) || "null")?.fullscreen};}catch(error){}
+function recordFullscreenEvent(type) {
+  fullscreenState.events.push({type,at:new Date().toISOString()});
+  try {
+    const key=window.DRAMIFY_STORAGE_KEY(PARTICIPANT_STORAGE_KEY);
+    const record=JSON.parse(localStorage.getItem(key) || "null");
+    if(record){record.fullscreen=fullscreenState;localStorage.setItem(key,JSON.stringify(record));window.DramifyCloud.changed();}
+  }catch(error){console.warn("Fullscreen event could not be saved");}
+}
+function requestStudyFullscreen() {
+  const element=document.documentElement;
+  if(document.fullscreenElement || document.webkitFullscreenElement)return;
+  fullscreenState.requested=true;
+  recordFullscreenEvent("requested");
+  const request=element.requestFullscreen || element.webkitRequestFullscreen;
+  if(!request){recordFullscreenEvent("unsupported");return;}
+  try {Promise.resolve(request.call(element)).catch(()=>recordFullscreenEvent("denied"));}
+  catch(error){recordFullscreenEvent("denied");}
+}
+function fullscreenChanged() {
+  if(document.querySelector(".completion-screen")?.hidden===false)return;
+  const entered=Boolean(document.fullscreenElement || document.webkitFullscreenElement);
+  if(entered)fullscreenState.entered=true;
+  else if(fullscreenState.entered)fullscreenState.exitedEarly=true;
+  recordFullscreenEvent(entered?"entered":"exited");
+}
+document.addEventListener("fullscreenchange",fullscreenChanged);
+document.addEventListener("webkitfullscreenchange",fullscreenChanged);
 let siteStarted = false;
 let siteStarting = false;
 let releaseResponseLock = null;
@@ -65,7 +101,7 @@ function showEnrollmentStep(step) {
   heading.hidden=step!==1;
   document.querySelector(".enrollment-intro").innerHTML=step===1?enrollmentWelcomeCopy:"";
   document.querySelector(".enrollment-intro").hidden=step!==1;
-  document.querySelector(".enrollment-submit").textContent = step===1?"Next":"Go to Dramify";
+  document.querySelector(".enrollment-submit").textContent = "Next";
   document.querySelector(".task-time-limit").hidden = !["2006","2008"].includes(assignedCode);
   enrollmentError.hidden=true;
   if(step===1)heading.focus();else document.querySelector(".enrollment-submit").focus();
@@ -172,6 +208,7 @@ participantForm.addEventListener("submit", async event => {
   event.preventDefault();
   if (siteStarted || siteStarting) return;
   if (enrollmentStep === 4) {
+    requestStudyFullscreen();
     if (returningParticipant) enterDramify(returningParticipant,returningParticipant.accessCode);
     return;
   }
@@ -184,9 +221,11 @@ participantForm.addEventListener("submit", async event => {
     }
   }
   if(!hasValidWorkerId())return;
+  requestStudyFullscreen();
   const participant = {
     schemaVersion: 1,
     ...(returningParticipant || {}),
+    fullscreen: fullscreenState,
     id: returningParticipant?.id || crypto.randomUUID(),
     gender: returningParticipant?.gender || "",
     age: returningParticipant?.age ?? null,
@@ -231,6 +270,8 @@ participantForm.addEventListener("submit", async event => {
 
 // The completion code is displayed only after confirmed local account deletion.
 function showCompletionScreen() {
+  const exit=document.exitFullscreen || document.webkitExitFullscreen;
+  if(exit && (document.fullscreenElement || document.webkitFullscreenElement))try{Promise.resolve(exit.call(document)).catch(()=>{});}catch(error){}
   document.querySelector("#dramify-app").hidden = true;
   document.querySelector(".enrollment").hidden = true;
   document.querySelector(".completion-screen").hidden = false;

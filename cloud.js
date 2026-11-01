@@ -65,6 +65,7 @@ window.DramifyCloud = (() => {
     behaviorCounts.profile_field = "mturk_worker_id";
     behaviorCounts.monthly_income_usd = record.monthlyIncome ?? null;
     behaviorCounts.allocation_method = record.allocationMethod || "independent-legacy";
+    behaviorCounts.fullscreen = record.fullscreen || null;
     behaviorCounts.is_test = Boolean(record.isTest);
     behaviorCounts.assignment_id = record.assignmentId || "";
     behaviorCounts.project_id = record.projectId || "";
