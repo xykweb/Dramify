@@ -8,7 +8,7 @@ const enrollmentError = document.querySelector("#enrollment-error");
 // Keep completion functional even when the editable HTML omits its optional template.
 if(!document.querySelector(".completion-screen")) {
   const screen=document.createElement("section");screen.className="completion-screen";screen.hidden=true;screen.setAttribute("aria-labelledby","completion-title");
-  screen.innerHTML=`<div class="enrollment-card completion-card"><h1 id="completion-title" tabindex="-1">Thank you! You have completed the Dramify experience.</h1><p></p><p class="completion-label">Completion code</p><div class="completion-code"></div><button class="copy-key-code enrollment-submit" type="button">Copy completion code</button><p class="copy-code-status" role="status"></p></div>`;
+  screen.innerHTML=`<div class="enrollment-card completion-card"><h1 id="completion-title" tabindex="-1">Thank you! You have completed the survey.</h1><p></p><p class="completion-label">Completion code</p><div class="completion-code"></div><button class="copy-key-code enrollment-submit" type="button">Copy completion code</button><p class="copy-code-status" role="status"></p></div>`;
   document.body.append(screen);
 }
 
@@ -282,7 +282,8 @@ function showCompletionScreen() {
   document.querySelector(".copy-code-status").hidden=!showCode;
   document.querySelector(".completion-code").textContent = completion.completionCode || "Preview complete";
   document.querySelector(".copy-key-code").hidden = !showCode;
-  document.querySelector(".completion-card p").textContent = completion.redirectUrl ? "Your responses have been saved. You will now be redirected to CloudResearch Connect to submit your participation." : completion.completionCode ? "Your responses have been saved. Copy the completion code below and return to CloudResearch Connect to submit it." : "Your responses have been saved. This is a preview; no research data was uploaded and no Connect submission will be made.";
+  document.querySelector(".completion-card p").textContent = completion.redirectUrl ? "Your responses have been saved. You will now be redirected to CloudResearch Connect to submit your participation." : completion.completionCode ? "Your responses have been saved. Copy the completion code below and return to CloudResearch Connect to submit it." : "";
+  document.querySelector(".completion-card p").hidden = !completion.redirectUrl && !completion.completionCode;
   document.querySelector(".return-connect")?.remove();
   if(completion.redirectUrl && !window.DRAMIFY_CONTEXT.isTest) {const link=document.createElement("a");link.href=completion.redirectUrl;link.textContent="Return to Connect";link.className="enrollment-submit return-connect";document.querySelector(".completion-card").append(link);setTimeout(()=>window.location.assign(completion.redirectUrl),2500);}
   document.body.classList.add("enrolling");

@@ -42,7 +42,6 @@ function initializeDramify(participant) {
   const key = "dramify.participant.v1";
   const grid = document.querySelector(".drama-grid");
   const heading = document.querySelector("main h1");
-  const search = document.querySelector("input[type=search]");
   const empty = document.querySelector(".empty-message");
   const notice = document.querySelector(".action-notice");
   const nav = {home:document.querySelector(".browse-all"),watchlist:document.querySelector(".my-watchlist-button"),liked:document.querySelector(".liked-button"),saved:document.querySelector(".watchlist-filter")};
@@ -139,10 +138,9 @@ function initializeDramify(participant) {
     empty.hidden=true;
     let list=displayed;
     if(["watchlist","saved","liked"].includes(currentView))list=list.filter(drama=>state(record,drama)[currentView]);
-    const query=search.value.trim().toLowerCase();list=list.filter(drama=>drama.title.toLowerCase().includes(query));
     grid.className="drama-grid";
     grid.replaceChildren(...list.map(drama=>card(drama,record)));
-    if(!list.length){empty.hidden=false;empty.textContent=query?"No dramas found.":currentView==="saved"?"No saved dramas yet. Save a drama from Dramify.":`No ${currentView} dramas yet.`;}
+    if(!list.length){empty.hidden=false;empty.textContent=currentView==="saved"?"No saved dramas yet. Save a drama from Dramify.":`No ${currentView} dramas yet.`;}
   }
   function route() {
     const route=window.location.hash.slice(1)||"home";
@@ -153,7 +151,6 @@ function initializeDramify(participant) {
   function go(view) {if(window.location.hash===`#${view}`)return;window.location.hash=view;}
   for(const [view,button] of Object.entries(nav))button.addEventListener("click",()=>go(view));
   document.querySelector(".watchlist-limit-close").addEventListener("click",()=>document.querySelector(".watchlist-limit-dialog").close());
-  search.addEventListener("input",render);
   window.addEventListener("hashchange",route);
   route();
 }
