@@ -282,8 +282,8 @@ main{padding-bottom:220px}
 .new-release-heading h1{font-size:36px;line-height:1.25;font-weight:700;letter-spacing:-.7px;color:#171717}
 .new-release-heading .heading-rule{display:block;width:240px;max-width:36%;height:3px;margin-top:22px;background:#888}
 
-/* Let the homepage banner span the full content pane beside the sidebar. */
-.page-content main .home-promotion{width:calc(100vw - 280px);max-width:none;margin-top:0;margin-left:calc((100% - (100vw - 280px)) / 2);margin-right:0;border-bottom:1px solid #dfc5cf;border-radius:0}
+/* Align the homepage banner with the title and drama grid. */
+.page-content main .home-promotion{width:90%;max-width:none;margin-top:0;margin-left:auto;margin-right:auto;border-bottom:1px solid #dfc5cf;border-radius:0}
 .page-content main .home-promotion img{border-radius:0}
 
 .desktop-only-notice{display:none}
