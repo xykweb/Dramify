@@ -1,4 +1,4 @@
-(() => {
+(async () => {
 if (window.DRAMIFY_MOBILE_BLOCKED) return;
 "use strict";
 
@@ -73,6 +73,28 @@ try {
   if(!localStorage.getItem(window.DRAMIFY_STORAGE_KEY(RESPONSE_START_KEY)))localStorage.setItem(window.DRAMIFY_STORAGE_KEY(RESPONSE_START_KEY),new Date().toISOString());
 } catch(error) {showEnrollmentError("Please allow browser storage to continue.");}
 const ASSIGNMENT_STORAGE_KEY = "dramify.assignment.v1";
+// Own the local response before reading or replacing it in another tab.
+if(!await acquireResponseLock()) {
+  showEnrollmentError("Dramify is already open in another tab. Please continue there or close it and try again.");
+  document.querySelector(".enrollment-submit").disabled=true;
+  return;
+}
+try {
+  const navigation=performance.getEntriesByType("navigation")[0];
+  const refresh=navigation?.type === "reload" && sessionStorage.getItem(window.DRAMIFY_STORAGE_KEY("dramify.visit.v1"));
+  if(!refresh) {
+    for(const key of [PARTICIPANT_STORAGE_KEY,ASSIGNMENT_STORAGE_KEY,RESPONSE_START_KEY,"dramify.supabase.auth"])
+      localStorage.removeItem(window.DRAMIFY_STORAGE_KEY(key));
+    for(const key of [ACCESS_SESSION_KEY,COMPLETION_SESSION_KEY])sessionStorage.removeItem(window.DRAMIFY_STORAGE_KEY(key));
+    fullscreenState={requested:false,entered:false,exitedEarly:false,events:[]};
+    localStorage.setItem(window.DRAMIFY_STORAGE_KEY(RESPONSE_START_KEY),new Date().toISOString());
+  }
+  sessionStorage.setItem(window.DRAMIFY_STORAGE_KEY("dramify.visit.v1"),"active");
+} catch(error) {
+  showEnrollmentError("Please allow browser storage, then refresh this page to continue.");
+  document.querySelector(".enrollment-submit").disabled=true;
+  return;
+}
 let assignedCode = null;
 function prepareAssignment() {
   const saved=JSON.parse(localStorage.getItem(window.DRAMIFY_STORAGE_KEY(PARTICIPANT_STORAGE_KEY)) || "null");
@@ -207,9 +229,18 @@ try {
   showEnrollmentError("Your saved details could not be read. Please allow browser storage to keep your details when you return.");
 }
 
+function createResponseId() {
+  if(typeof crypto.randomUUID === "function")return crypto.randomUUID();
+  const bytes=crypto.getRandomValues(new Uint8Array(16));
+  bytes[6]=(bytes[6]&15)|64;bytes[8]=(bytes[8]&63)|128;
+  const hex=Array.from(bytes,b=>b.toString(16).padStart(2,"0")).join("");
+  return `${hex.slice(0,8)}-${hex.slice(8,12)}-${hex.slice(12,16)}-${hex.slice(16,20)}-${hex.slice(20)}`;
+}
+
 participantForm.addEventListener("submit", async event => {
   event.preventDefault();
   if (siteStarted || siteStarting) return;
+  try {
   if (enrollmentStep === 4) {
     requestStudyFullscreen();
     if (returningParticipant) enterDramify(returningParticipant,returningParticipant.accessCode);
@@ -229,7 +260,7 @@ participantForm.addEventListener("submit", async event => {
     schemaVersion: 1,
     ...(returningParticipant || {}),
     fullscreen: fullscreenState,
-    id: returningParticipant?.id || crypto.randomUUID(),
+    id: returningParticipant?.id || createResponseId(),
     gender: returningParticipant?.gender || "",
     age: returningParticipant?.age ?? null,
     country:"",
@@ -259,6 +290,7 @@ participantForm.addEventListener("submit", async event => {
   }
   const button=document.querySelector("#enrollment-form .enrollment-submit");
   siteStarting=true;button.disabled=true;button.textContent="Preparing…";
+  const connectionNotice=setTimeout(()=>showEnrollmentError("Connecting is taking longer than expected. Please check your network connection. You can refresh this page and try again; your details have been saved."),12000);
   try {
     returningParticipant=await window.DramifyCloud.allocateCondition(participant);
     assignedCode=returningParticipant.accessCode;
@@ -267,7 +299,11 @@ participantForm.addEventListener("submit", async event => {
   } catch(error) {
     showEnrollmentError("We could not prepare your study session. Please check your connection and try again.");
     console.warn("Dramify assignment:",error.message);
-  } finally {siteStarting=false;button.disabled=false;if(enrollmentStep===1)button.textContent="Next";}
+  } finally {clearTimeout(connectionNotice);siteStarting=false;button.disabled=false;if(enrollmentStep===1)button.textContent="Next";}
+  } catch(error) {
+    showEnrollmentError("We could not start your session. Please allow browser storage and use an up-to-date Chrome or Edge browser, then refresh and try again.");
+    console.warn("Dramify enrollment:",error.message);
+  }
 });
 
 
