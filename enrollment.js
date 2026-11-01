@@ -61,8 +61,7 @@ let activeParticipant = null;
 let stayTimerFrame = null;
 
 function formatStayDuration(seconds) {
-  const ms = Math.max(0, Math.floor(seconds * 1000));
-  return `${String(Math.floor(ms / 3600000)).padStart(2,"0")}:${String(Math.floor(ms / 60000) % 60).padStart(2,"0")}:${String(Math.floor(ms / 1000) % 60).padStart(2,"0")}.${String(ms % 1000).padStart(3,"0")}`;
+  return Math.max(0, seconds).toFixed(2);
 }
 let enrollmentStep = 1;
 let returningParticipant = null;

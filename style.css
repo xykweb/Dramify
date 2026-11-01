@@ -299,3 +299,6 @@ html.mobile-device body>.desktop-only-notice{display:grid!important;min-height:1
 .stay-timer.time-expired .stay-timer-value{color:#b5205b;animation:timer-urgency 1.6s ease-in-out infinite}
 @keyframes timer-urgency{0%,30%,100%{transform:translateX(0)}5%,15%,25%{transform:translateX(-3px)}10%,20%{transform:translateX(3px)}}
 @media(prefers-reduced-motion:reduce){.stay-timer.time-expired .stay-timer-value{animation:none}}
+
+.sidebar .stay-timer>span:not(.stay-timer-value){font-size:12px;line-height:1.4}
+.sidebar .stay-timer-value{font-size:30px;min-width:0;letter-spacing:0;font-weight:650}
