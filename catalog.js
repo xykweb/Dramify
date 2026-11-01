@@ -10,7 +10,7 @@ window.DramifyContent = (() => {
     if (!Array.isArray(rows) || rows.length < 2) throw new Error("The content workbook is empty.");
     const first = rows[0].map(value => String(value ?? "").trim());
     const columns = headers.map(header => first.indexOf(header));
-    if (columns.some(index => index < 0)) throw new Error("The content workbook must retain all seven column headers.");
+    if (columns.slice(0,2).some(index => index < 0)) throw new Error("The content workbook must retain the ItemNumber and 标题 column headers.");
     const records = new Map();
     for (const row of rows.slice(1)) {
       if (!row.some(value => value !== null && value !== undefined && String(value).trim() !== "")) continue;

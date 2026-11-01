@@ -175,7 +175,9 @@ function showDramify(participant, code) {
     const timerValue = document.querySelector(".stay-timer-value");
     const updateStayTimer = () => {
       if (!activeParticipant) return;
-      timerValue.textContent = formatStayDuration(Math.max(0, 180 - window.DramifyCloud.getDurationSeconds()));
+      const remaining = Math.max(0, 120 - window.DramifyCloud.getDurationSeconds());
+      timerValue.textContent = formatStayDuration(remaining);
+      stayTimer.classList.toggle("time-expired", remaining === 0);
       stayTimerFrame = requestAnimationFrame(updateStayTimer);
     };
     updateStayTimer();
@@ -425,7 +427,7 @@ function surveyRecord() {return JSON.parse(localStorage.getItem(window.DRAMIFY_S
 function saveSurvey(patch) {
   const record=surveyRecord();
   if (!record || record.id !== activeParticipant?.id) throw new Error("Participant changed");
-  record.postSurvey = {...record.postSurvey,...patch,version:"post-experience-v1",updatedAt:new Date().toISOString()};
+  record.postSurvey = {...record.postSurvey,...patch,version:"post-experience-v2",updatedAt:new Date().toISOString()};
   localStorage.setItem(window.DRAMIFY_STORAGE_KEY(PARTICIPANT_STORAGE_KEY),JSON.stringify(record));
   window.DramifyCloud.changed();
 }

@@ -294,3 +294,8 @@ html.mobile-device body>.desktop-only-notice{display:grid!important;min-height:1
 .desktop-only-logo{display:block;width:194px;max-width:70%;height:auto;margin:0 auto 30px}
 .desktop-only-card h1{font-size:25px;line-height:1.35;font-weight:700;letter-spacing:-.4px;color:#292329;margin:0 0 18px}
 .desktop-only-card p{font-size:17px;line-height:1.75;color:#584c54;margin:0}
+
+.sidebar .stay-timer.time-expired{border-color:#cc2867;background:#fff1f5}
+.stay-timer.time-expired .stay-timer-value{color:#b5205b;animation:timer-urgency 1.6s ease-in-out infinite}
+@keyframes timer-urgency{0%,30%,100%{transform:translateX(0)}5%,15%,25%{transform:translateX(-3px)}10%,20%{transform:translateX(3px)}}
+@media(prefers-reduced-motion:reduce){.stay-timer.time-expired .stay-timer-value{animation:none}}
