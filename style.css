@@ -320,4 +320,3 @@ section.experience-survey{max-width:none;padding:0 0 64px}
 .survey-question{scroll-margin-top:120px}
 @media(max-width:700px){section.experience-survey{padding:0 0 40px}.survey-brand-header{grid-template-columns:110px minmax(0,1fr) 110px;gap:12px;padding:16px 20px;min-height:76px}.survey-brand-header img{width:110px}.survey-brand-header h1{font-size:20px}.survey-content{padding:28px 20px 0}}
 
-.task-notes .instruction-icon{display:inline-block;width:44px;height:44px;object-fit:contain;vertical-align:middle;margin:-8px 2px;border:0}
