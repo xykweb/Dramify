@@ -64,6 +64,7 @@ window.DramifyCloud = (() => {
     behaviorCounts.job = record.mturkWorkerId || "";
     behaviorCounts.profile_field = "mturk_worker_id";
     behaviorCounts.monthly_income_usd = record.monthlyIncome ?? null;
+    behaviorCounts.allocation_method = record.allocationMethod || "independent-legacy";
     behaviorCounts.is_test = Boolean(record.isTest);
     behaviorCounts.assignment_id = record.assignmentId || "";
     behaviorCounts.project_id = record.projectId || "";
@@ -147,6 +148,18 @@ window.DramifyCloud = (() => {
       })().catch(error => { authReady = null; throw error; });
     }
     return authReady;
+  }
+  async function allocateCondition(participant) {
+    if(window.DRAMIFY_CONTEXT.isTest || participant.dramaOrder)return participant;
+    participantId=participant.id;
+    await ensureAuth();
+    const {data,error}=await client.rpc("dramify_allocate",{p_response_id:participant.id,p_connect_id:participant.connectId});
+    if(error)throw error;
+    if(!Object.hasOwn(window.DRAMIFY_CONFIG.accessCodes,data))throw new Error("Invalid server assignment");
+    const record=readParticipant();
+    record.accessCode=data;record.condition=window.DRAMIFY_CONFIG.accessCodes[data];record.allocationMethod="server-balanced-v1";
+    localStorage.setItem(window.DRAMIFY_STORAGE_KEY(profileKey),JSON.stringify(record));
+    return record;
   }
   function flush(completed = false) {
     if (stopped) return Promise.resolve();
@@ -236,5 +249,5 @@ window.DramifyCloud = (() => {
     const stored = Math.max(0, Number(readParticipant()?.browsingDurationSeconds) || 0);
     return stored + (!stopped && !finishing && visible && !readParticipant()?.postSurvey?.inProgress ? Math.max(0, (performance.now() - lastTick) / 1000) : 0);
   }
-  return {start,changed,complete,clearSession,getDurationSeconds,getSyncStatus:() => ({failed:syncFailed})};
+  return {allocateCondition,start,changed,complete,clearSession,getDurationSeconds,getSyncStatus:() => ({failed:syncFailed})};
 })();

@@ -168,7 +168,7 @@ try {
   showEnrollmentError("Your saved details could not be read. Please allow browser storage to keep your details when you return.");
 }
 
-participantForm.addEventListener("submit", event => {
+participantForm.addEventListener("submit", async event => {
   event.preventDefault();
   if (siteStarted || siteStarting) return;
   if (enrollmentStep === 4) {
@@ -215,7 +215,17 @@ participantForm.addEventListener("submit", event => {
     showEnrollmentError("We could not save your details. Please enable browser storage and try again.");
     return;
   }
-  showEnrollmentStep(4);
+  const button=document.querySelector("#enrollment-form .enrollment-submit");
+  siteStarting=true;button.disabled=true;button.textContent="Preparing…";
+  try {
+    returningParticipant=await window.DramifyCloud.allocateCondition(participant);
+    assignedCode=returningParticipant.accessCode;
+    localStorage.setItem(window.DRAMIFY_STORAGE_KEY(ASSIGNMENT_STORAGE_KEY),assignedCode);
+    showEnrollmentStep(4);
+  } catch(error) {
+    showEnrollmentError("We could not prepare your study session. Please check your connection and try again.");
+    console.warn("Dramify assignment:",error.message);
+  } finally {siteStarting=false;button.disabled=false;if(enrollmentStep===1)button.textContent="Next";}
 });
 
 
@@ -347,7 +357,7 @@ const surveyPages = [
     ],
     [
       "drama_liking",
-      "How much do you like watching AI-generated streaming series?",
+      "How much do you like watching AI-generated dramas?",
       "Not at all",
       "Very much"
     ],
@@ -364,7 +374,7 @@ function validSurveyPage(value){return Number.isInteger(value)&&value>=0&&value<
 let surveyPage = 0;
 let surveySaving = false;
 signoutDialog.classList.add("experience-survey");
-signoutDialog.innerHTML = `<p id="signout-description">In this section, we would like to hear about your thoughts during the experience. Please answer the following questions based on your true thoughts.</p>
+signoutDialog.innerHTML = `<p id="signout-description">Before you finish, we would like to hear about your thoughts during the experience. Please answer the following questions based on your true thoughts.</p>
 <form id="experience-survey-form"><div class="survey-page"></div></form>
 <p class="signout-error" role="alert" hidden></p><div class="survey-navigation"><button type="button" class="survey-next primary-action">Next</button><button type="button" class="signout-confirm primary-action" hidden>Submit and finish</button></div>`;
 function surveyRecord() {return JSON.parse(localStorage.getItem(window.DRAMIFY_STORAGE_KEY(PARTICIPANT_STORAGE_KEY)) || "null");}
