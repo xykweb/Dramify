@@ -276,14 +276,14 @@ main{padding-bottom:220px}
 .selection-complete-bar p{font-size:20px;line-height:1.6;font-weight:700;color:#000}
 .experience-survey #signout-description{font-size:20px;font-weight:700;line-height:1.7;color:#000}
 
-.page-content main{padding-top:24px;min-height:100vh}
+.page-content main{padding-top:0;min-height:100vh}
 
 .section-heading.new-release-heading{display:block;margin-top:40px;margin-bottom:52px}
 .new-release-heading h1{font-size:36px;line-height:1.25;font-weight:700;letter-spacing:-.7px;color:#171717}
 .new-release-heading .heading-rule{display:block;width:240px;max-width:36%;height:3px;margin-top:22px;background:#888}
 
 /* Let the homepage banner span the full content pane beside the sidebar. */
-.page-content main .home-promotion{width:calc(100vw - 280px);max-width:none;margin-left:calc((100% - (100vw - 280px)) / 2);margin-right:0}
+.page-content main .home-promotion{width:calc(100vw - 280px);max-width:none;margin-top:0;margin-left:calc((100% - (100vw - 280px)) / 2);margin-right:0;border-bottom:1px solid #dfc5cf;border-radius:0}
 .page-content main .home-promotion img{border-radius:0}
 
 .desktop-only-notice{display:none}
