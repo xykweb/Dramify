@@ -89,8 +89,12 @@ body.enrolling{min-width:0;background:#faf7f8}
 .sign-out{justify-content:center;gap:10px;height:44px;border:1px solid #d99bb5;border-radius:5px;background:#fbe5ee;color:#ad2158;font-weight:700;margin-bottom:28px}
 .sign-out:hover{background:#f6d1e0;border-color:#c95284;color:#921444}
 .completion-screen{display:grid;min-height:100vh;place-items:center;padding:48px 24px;background:radial-gradient(ellipse at 85% 15%,#f9e6ed 0,transparent 50%)}
-.completion-card{text-align:center}
-.completion-card h1{font-size:28px;margin:18px 0 12px}
+.enrollment-card.completion-card{width:min(100%,960px);max-width:960px;padding:44px 52px 52px;text-align:left}
+.completion-logo{display:block;width:194px;max-width:45%;height:auto;margin:0 0 44px}
+.completion-card h1{font-size:clamp(19px,2vw,28px);line-height:1.55;font-weight:600;letter-spacing:-.35px;margin:0 0 16px}
+.completion-card h1 span{display:block}
+.completion-card h1 span+span{margin-top:8px}
+@media(max-width:650px){.enrollment-card.completion-card{padding:30px 24px 36px}.completion-logo{margin-bottom:30px}}
 .completion-card p{font-size:14px;line-height:1.7;color:#82717b}
 .completion-check{width:48px;height:48px;display:grid;place-items:center;margin:auto;border-radius:50%;background:#fbe5ee;color:#bb285f;font-size:26px}
 .completion-card .completion-label{margin:28px 0 8px;font-size:12px;font-weight:650;color:#755362;text-transform:uppercase;letter-spacing:1px}

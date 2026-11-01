@@ -8,7 +8,7 @@ const enrollmentError = document.querySelector("#enrollment-error");
 // Keep completion functional even when the editable HTML omits its optional template.
 if(!document.querySelector(".completion-screen")) {
   const screen=document.createElement("section");screen.className="completion-screen";screen.hidden=true;screen.setAttribute("aria-labelledby","completion-title");
-  screen.innerHTML=`<div class="enrollment-card completion-card"><h1 id="completion-title" tabindex="-1">Thank you! You have completed the survey.</h1><p></p><p class="completion-label">Completion code</p><div class="completion-code"></div><button class="copy-key-code enrollment-submit" type="button">Copy completion code</button><p class="copy-code-status" role="status"></p></div>`;
+  screen.innerHTML=`<div class="enrollment-card completion-card"><img class="completion-logo" src="assets/brand/Logo.jpg" alt="Dramify" width="194"><h1 id="completion-title" tabindex="-1"><span>We thank you for your time spent taking this survey.</span><span>Your response has been recorded.</span></h1><p></p><p class="completion-label">Completion code</p><div class="completion-code"></div><button class="copy-key-code enrollment-submit" type="button">Copy completion code</button><p class="copy-code-status" role="status"></p></div>`;
   document.body.append(screen);
 }
 
