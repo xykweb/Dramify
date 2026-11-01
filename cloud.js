@@ -89,7 +89,7 @@ window.DramifyCloud = (() => {
       Duration__in_seconds_:Math.max(0,Math.round((Date.parse(now)-Date.parse(start))/1000)),
       Finished:Boolean(completed),
       ResponseId:record.id,
-      DistributionChannel:record.isTest?"preview":record.recruitmentSource || "direct"
+      DistributionChannel:record.isTest?"preview":"cloudresearch"
     };
     behaviorCounts.duration_metric = record.durationMetric || "legacy";
     return {
@@ -120,7 +120,7 @@ window.DramifyCloud = (() => {
       authReady = (async () => {
         if (!window.supabase?.createClient) throw new Error("Supabase client unavailable");
         if (!client) client = window.supabase.createClient(window.DRAMIFY_CONFIG.supabase.url, window.DRAMIFY_CONFIG.supabase.publishableKey, {
-          auth:{storageKey:authStorageKey, persistSession:true, autoRefreshToken:true, detectSessionInUrl:false}
+          auth:{storageKey:window.DRAMIFY_STORAGE_KEY(authStorageKey), persistSession:true, autoRefreshToken:true, detectSessionInUrl:false}
         });
         const record = readParticipant();
         const {data:sessionData,error:sessionError} = await client.auth.getSession();
@@ -167,7 +167,7 @@ window.DramifyCloud = (() => {
     // Serialize writes. Read a fresh snapshot when a request actually executes,
     // so an earlier request cannot overwrite a more recent choice or rating.
     const work = queue.catch(() => {}).then(async () => {
-      const userId = window.DRAMIFY_CONTEXT.isTest ? "preview" : await ensureAuth();
+      const userId = await ensureAuth();
       const record = readParticipant();
       if (completed) {
         requireSixWatchlist(record);
@@ -176,7 +176,6 @@ window.DramifyCloud = (() => {
         if (!keys.every(key => Number.isInteger(record.postSurvey?.[key]) && record.postSurvey[key] >= 1 && record.postSurvey[key] <= 7)) throw new Error("Please complete the questionnaire before finishing.");
       }
       const row = buildSnapshot(record,userId,completed);
-      if(window.DRAMIFY_CONTEXT.isTest)return;
       const {error} = await client.from("dramify_responses").upsert(row,{onConflict:"id"});
       if (error) throw error;
       showFailure(false);
