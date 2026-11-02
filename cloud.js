@@ -67,6 +67,10 @@ window.DramifyCloud = (() => {
     behaviorCounts.allocation_method = record.allocationMethod || "independent-legacy";
     behaviorCounts.fullscreen = record.fullscreen || null;
     behaviorCounts.is_test = Boolean(record.isTest);
+    const ua=navigator.userAgent || "";
+    behaviorCounts.device_type=/iPad|Tablet/i.test(ua) || (navigator.platform==="MacIntel" && navigator.maxTouchPoints>1) || (/Android/i.test(ua) && !/Mobile/i.test(ua)) ? "Tablet" : /Mobi|iPhone|iPod|IEMobile/i.test(ua) ? "Mobile" : "Desktop/Laptop";
+    behaviorCounts.browser_type=/Edg(?:e|A|iOS)?\//i.test(ua)?"Edge":/OPR\/|Opera/i.test(ua)?"Opera":/Firefox\/|FxiOS\//i.test(ua)?"Firefox":/Chrome\/|CriOS\//i.test(ua)?"Chrome":/Safari\//i.test(ua)?"Safari":"Other";
+
     behaviorCounts.assignment_id = record.assignmentId || "";
     behaviorCounts.project_id = record.projectId || "";
     behaviorCounts.referrer = record.referrer || "";
