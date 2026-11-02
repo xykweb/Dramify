@@ -262,6 +262,7 @@ participantForm.addEventListener("submit", async event => {
     schemaVersion: 1,
     ...(returningParticipant || {}),
     fullscreen: fullscreenState,
+    timeZone: returningParticipant?.timeZone || Intl.DateTimeFormat().resolvedOptions().timeZone || "UTC",
     id: returningParticipant?.id || createResponseId(),
     gender: returningParticipant?.gender || "",
     age: returningParticipant?.age ?? null,
