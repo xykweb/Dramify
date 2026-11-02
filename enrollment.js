@@ -425,12 +425,6 @@ const surveyPages = [
   ],
   [
     [
-      "pleasure",
-      "To what extent were your selection preferences motivated by the pursuit of pleasure?",
-      "Not at all",
-      "Very much"
-    ],
-    [
       "time_pressure",
       "How much time pressure did you feel when making your selections?",
       "No pressure",
@@ -447,6 +441,12 @@ const surveyPages = [
     [
       "drama_liking",
       "How much do you like watching AI-generated series?",
+      "Not at all",
+      "Very much"
+    ],
+    [
+      "pleasure",
+      "To what extent were your selection preferences motivated by the pursuit of pleasure?",
       "Not at all",
       "Very much"
     ],
@@ -470,7 +470,7 @@ function surveyRecord() {return JSON.parse(localStorage.getItem(window.DRAMIFY_S
 function saveSurvey(patch) {
   const record=surveyRecord();
   if (!record || record.id !== activeParticipant?.id) throw new Error("Participant changed");
-  record.postSurvey = {...record.postSurvey,...patch,version:"post-experience-v3",updatedAt:new Date().toISOString()};
+  record.postSurvey = {...record.postSurvey,...patch,version:"post-experience-v4",updatedAt:new Date().toISOString()};
   localStorage.setItem(window.DRAMIFY_STORAGE_KEY(PARTICIPANT_STORAGE_KEY),JSON.stringify(record));
   window.DramifyCloud.changed();
 }
