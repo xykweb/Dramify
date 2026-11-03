@@ -337,3 +337,15 @@ section.experience-survey{max-width:none;padding:0 0 64px}
 .watchlist-progress p:last-child{margin:10px 0 0}
 .watchlist-progress strong{font-size:20px;color:#b5205b}
 .watchlist-progress.is-complete{background:#f7edf2;border-color:#bc6b8d}
+
+.enrollment .practice-options{margin:22px 0 28px;padding:0;border:0}
+.practice-options legend{font-size:17px;font-weight:600;line-height:1.6;margin-bottom:12px}
+.enrollment .practice-options label{display:flex;align-items:center;gap:12px;margin:0;padding:9px 0;font-size:16px;font-weight:400}
+.enrollment .practice-options input{width:18px;height:18px;margin:0;flex-shrink:0;accent-color:#c82867}
+
+body.session-expired>*{display:none!important}
+body.session-expired>.session-expired-screen{display:grid!important;place-items:center;min-height:100vh;padding:32px;background:#faf7f8}
+.session-expired-screen>div{width:min(100%,720px);padding:40px;background:white;border:1px solid #eadce3;border-radius:14px;line-height:1.7}
+.session-expired-screen img{display:block;margin-bottom:28px}
+.session-expired-screen h1{font-size:26px;margin-bottom:20px}
+.expiry-retry{padding:12px 24px;border:0;border-radius:6px;background:#b5205b;color:white}

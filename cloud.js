@@ -47,7 +47,7 @@ window.DramifyCloud = (() => {
   }
   function buildSnapshot(record, userId, completed) {
     const code = record.accessCode || Object.entries(window.DRAMIFY_CONFIG.accessCodes).find(([, condition]) => condition === record.condition)?.[0];
-    if (!code || window.DRAMIFY_CONFIG.accessCodes[code]!==record.condition || !Array.isArray(record.dramaOrder) || record.dramaOrder.length !== 16 || new Set(record.dramaOrder).size!==16 || !record.dramaOrder.every(id=>Number.isInteger(id)&&id>=1&&id<=16)) throw new Error("Invalid assignment");
+    if (!code || window.DRAMIFY_CONFIG.accessCodes[code]!==record.condition || (completed || record.dramaOrder) && (!Array.isArray(record.dramaOrder) || record.dramaOrder.length !== 16 || new Set(record.dramaOrder).size!==16 || !record.dramaOrder.every(id=>Number.isInteger(id)&&id>=1&&id<=16))) throw new Error("Invalid assignment");
     const stimuli = {};
     for (let id = 1; id <= 16; id++) for (const version of ["a", "b"]) {
       const key = `${id}${version}`;
@@ -67,6 +67,7 @@ window.DramifyCloud = (() => {
     behaviorCounts.allocation_method = record.allocationMethod || "independent-legacy";
     behaviorCounts.fullscreen = record.fullscreen || null;
     behaviorCounts.is_test = Boolean(record.isTest);
+    behaviorCounts.session_expired=Boolean(record.sessionExpired);
     try {behaviorCounts.time_zone=record.timeZone || Intl.DateTimeFormat().resolvedOptions().timeZone || "UTC";} catch(error){behaviorCounts.time_zone="UTC";}
 
     const ua=navigator.userAgent || "";
@@ -115,7 +116,7 @@ window.DramifyCloud = (() => {
       duration_seconds: Math.round((Number(record.durationSeconds) || 0) * 1000) / 1000,
       app_rating: null,
       comment: record.postSurvey?.comment || "",
-      drama_order: record.dramaOrder,
+      drama_order: record.dramaOrder || [],
       stimuli,
       completed: Boolean(completed),
       updated_at: new Date().toISOString()
@@ -185,6 +186,7 @@ window.DramifyCloud = (() => {
       const userId = await ensureAuth();
       const record = readParticipant();
       if (completed) {
+        if(Date.now()-Date.parse(record.startDate || record.createdAt)>=3600000)throw new Error("The one-hour survey session has expired.");
         requireSixWatchlist(record);
         if(!["male","female","nonbinary-other","prefer-not-to-say"].includes(record.gender) || !Number.isInteger(record.age) || record.age<1 || record.age>120 || !Number.isFinite(record.monthlyIncome) || record.monthlyIncome < 0) throw new Error("Please complete your demographic information.");
         const keys = ["imagery_events", "imagery_self", "narrative_involvement", "storyline_detail", "narrative_depth", "story_richness", "telepresence_presence", "telepresence_absorption", "control_events", "control_life", "control_decisions", "pleasure", "time_pressure", "decision_speed", "drama_liking", "financial_constraint"];
@@ -237,6 +239,15 @@ window.DramifyCloud = (() => {
     stopped = true;
     clearInterval(interval);
   }
+  async function expire(participant) {
+    if(stopped && finishing)return;
+    participantId=participant.id;
+    if(!stopped)checkpoint();
+    const record=readParticipant();record.sessionExpired=true;
+    localStorage.setItem(window.DRAMIFY_STORAGE_KEY(profileKey),JSON.stringify(record));
+    stopped=false;finishing=false;clearTimeout(timer);clearInterval(interval);
+    try {await flush(false);} finally {stopped=true;}
+  }
   async function clearSession() {
     // The final row remains in the database. Only local authentication is reset.
     try {if(client)await client.auth.signOut({scope:"local"});} catch (error) { /* Data is already saved. */ }
@@ -264,5 +275,5 @@ window.DramifyCloud = (() => {
     const stored = Math.max(0, Number(readParticipant()?.browsingDurationSeconds) || 0);
     return stored + (!stopped && !finishing && visible && !readParticipant()?.postSurvey?.inProgress ? Math.max(0, (performance.now() - lastTick) / 1000) : 0);
   }
-  return {allocateCondition,start,changed,complete,clearSession,getDurationSeconds,getSyncStatus:() => ({failed:syncFailed})};
+  return {allocateCondition,start,changed,complete,clearSession,expire,getDurationSeconds,getSyncStatus:() => ({failed:syncFailed})};
 })();

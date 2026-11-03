@@ -245,7 +245,7 @@ participantForm.addEventListener("submit", async event => {
   try {
   if (enrollmentStep === 4) {
     if(!document.querySelector('.practice-action[data-action="watchlist"]').matches('[aria-pressed="true"]')) {showEnrollmentError("Please add the sample series to your Watchlist before continuing.");return;}
-    if(document.querySelector("#practice-like").value!=="unlimited" || document.querySelector("#practice-save").value!=="unlimited") {showEnrollmentError("That answer is incorrect. You can Like and Save as many series as you wish. Please check your answers and try again.");return;}
+    if(document.querySelector('input[name="practice-like-save"]:checked')?.value!=="unlimited") {showEnrollmentError("That answer is incorrect. You can Like and Save as many series as you wish. Please check your answers and try again.");return;}
     requestStudyFullscreen();
     if (returningParticipant) enterDramify(returningParticipant,returningParticipant.accessCode);
     return;
@@ -638,6 +638,34 @@ for(const button of document.querySelectorAll(".practice-action")) {
     enrollmentError.hidden=true;
   });
 }
+let sessionExpired=false;
+const sessionStart=Date.parse(localStorage.getItem(window.DRAMIFY_STORAGE_KEY(RESPONSE_START_KEY)));
+const expiryScreen=document.createElement("section");expiryScreen.className="session-expired-screen";expiryScreen.hidden=true;
+expiryScreen.innerHTML='<div><img src="assets/brand/Logo.jpg" alt="Dramify" width="186"><h1>Your survey session has expired</h1><p>The one-hour time limit has been reached. This response is incomplete and has not been submitted as a completed survey.</p><p class="expiry-sync" role="status"></p><button type="button" class="expiry-retry" hidden>Retry saving</button></div>';
+document.body.append(expiryScreen);
+async function saveExpired(){
+ const status=expiryScreen.querySelector('.expiry-sync'),retry=expiryScreen.querySelector('.expiry-retry');retry.hidden=true;
+ const record=surveyRecord();
+ if(!record){status.textContent='No response was started.';return;}
+ status.textContent='Saving your incomplete response…';
+ try {await window.DramifyCloud.expire(record);status.textContent='Your incomplete response has been saved.';}
+ catch(error){status.textContent='Your incomplete response is saved on this device but could not be uploaded. Please reconnect and click Retry saving.';retry.hidden=false;}
+}
+function enforceSessionLimit(event){
+ if(document.querySelector('.completion-screen')?.hidden===false)return;
+ if(!Number.isFinite(sessionStart) || Date.now()-sessionStart<3600000)return;
+ if(event){event.preventDefault();event.stopImmediatePropagation();}
+ if(sessionExpired)return;
+ sessionExpired=true;document.body.classList.add('session-expired');expiryScreen.hidden=false;
+ if(stayTimerFrame!==null)cancelAnimationFrame(stayTimerFrame);
+ saveExpired();
+}
+expiryScreen.querySelector('.expiry-retry').addEventListener('click',saveExpired);
+for(const type of ['click','submit','input'])document.addEventListener(type,event=>{if(!expiryScreen.contains(event.target))enforceSessionLimit(event);},true);
+setInterval(enforceSessionLimit,1000);
+window.addEventListener('focus',enforceSessionLimit);
+document.addEventListener('visibilitychange',()=>enforceSessionLimit());
+enforceSessionLimit();
 document.querySelector(".enrollment-submit").disabled=false;
 window.DramifySupport.ready();
 })().catch(function(error){console.warn("Dramify startup:",error);window.DramifySupport.fatal();});
