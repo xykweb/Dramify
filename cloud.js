@@ -67,7 +67,7 @@ window.DramifyCloud = (() => {
     behaviorCounts.allocation_method = record.allocationMethod || "independent-legacy";
     behaviorCounts.fullscreen = record.fullscreen || null;
     behaviorCounts.is_test = Boolean(record.isTest);
-    behaviorCounts.session_expired=Boolean(record.sessionExpired);
+    behaviorCounts.connect_entry_verified=Boolean(record.connectEntryVerified);
     try {behaviorCounts.time_zone=record.timeZone || Intl.DateTimeFormat().resolvedOptions().timeZone || "UTC";} catch(error){behaviorCounts.time_zone="UTC";}
 
     const ua=navigator.userAgent || "";
@@ -96,7 +96,7 @@ window.DramifyCloud = (() => {
       Duration__in_seconds_:Math.max(0,Math.round((Date.parse(now)-Date.parse(start))/1000)),
       Finished:Boolean(completed),
       ResponseId:record.id,
-      DistributionChannel:record.isTest?"preview":"cloudresearch"
+      DistributionChannel:record.isTest?"preview":record.connectEntryVerified?"cloudresearch":"direct"
     };
     behaviorCounts.duration_metric = record.durationMetric || "legacy";
     return {
@@ -186,7 +186,6 @@ window.DramifyCloud = (() => {
       const userId = await ensureAuth();
       const record = readParticipant();
       if (completed) {
-        if(Date.now()-Date.parse(record.startDate || record.createdAt)>=3600000)throw new Error("The one-hour survey session has expired.");
         requireSixWatchlist(record);
         if(!["male","female","nonbinary-other","prefer-not-to-say"].includes(record.gender) || !Number.isInteger(record.age) || record.age<1 || record.age>120 || !Number.isFinite(record.monthlyIncome) || record.monthlyIncome < 0) throw new Error("Please complete your demographic information.");
         const keys = ["imagery_events", "imagery_self", "narrative_involvement", "storyline_detail", "narrative_depth", "story_richness", "telepresence_presence", "telepresence_absorption", "control_events", "control_life", "control_decisions", "pleasure", "time_pressure", "decision_speed", "drama_liking", "financial_constraint"];
@@ -239,15 +238,6 @@ window.DramifyCloud = (() => {
     stopped = true;
     clearInterval(interval);
   }
-  async function expire(participant) {
-    if(stopped && finishing)return;
-    participantId=participant.id;
-    if(!stopped)checkpoint();
-    const record=readParticipant();record.sessionExpired=true;
-    localStorage.setItem(window.DRAMIFY_STORAGE_KEY(profileKey),JSON.stringify(record));
-    stopped=false;finishing=false;clearTimeout(timer);clearInterval(interval);
-    try {await flush(false);} finally {stopped=true;}
-  }
   async function clearSession() {
     // The final row remains in the database. Only local authentication is reset.
     try {if(client)await client.auth.signOut({scope:"local"});} catch (error) { /* Data is already saved. */ }
@@ -275,5 +265,5 @@ window.DramifyCloud = (() => {
     const stored = Math.max(0, Number(readParticipant()?.browsingDurationSeconds) || 0);
     return stored + (!stopped && !finishing && visible && !readParticipant()?.postSurvey?.inProgress ? Math.max(0, (performance.now() - lastTick) / 1000) : 0);
   }
-  return {allocateCondition,start,changed,complete,clearSession,expire,getDurationSeconds,getSyncStatus:() => ({failed:syncFailed})};
+  return {allocateCondition,start,changed,complete,clearSession,getDurationSeconds,getSyncStatus:() => ({failed:syncFailed})};
 })();

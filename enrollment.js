@@ -251,9 +251,15 @@ participantForm.addEventListener("submit", async event => {
     return;
   }
   if (enrollmentStep === 1) {
+    if(!window.DRAMIFY_CONTEXT.isTest && !window.DRAMIFY_CONTEXT.isConnect) {
+      showEnrollmentError("Please open this study from your CloudResearch Connect project page. This link is missing the required participant information. For testing, use the preview link.");return;
+    }
+    if(!window.DRAMIFY_CONTEXT.isTest && workerIdInput.value.trim()!==window.DRAMIFY_CONTEXT.participantId.trim()) {
+      showEnrollmentError("Your Connect ID must match the participant ID provided by CloudResearch Connect. Please check your ID or reopen the study from Connect.");return;
+    }
     if (!hasValidWorkerId()) return;
     const completedIds=JSON.parse(localStorage.getItem(window.DRAMIFY_STORAGE_KEY("dramify.completedConnectIds.v1")) || "[]");
-    if(!window.DRAMIFY_CONTEXT.isTest && (localStorage.getItem(window.DRAMIFY_STORAGE_KEY("dramify.deviceCompleted.v1")) || completedIds.includes(workerIdInput.value.trim()))) {showEnrollmentError("You have already completed this study. Please return to CloudResearch Connect.");return;}
+    if(!window.DRAMIFY_CONTEXT.isTest && completedIds.includes(workerIdInput.value.trim())) {showEnrollmentError("You have already completed this study. Please return to CloudResearch Connect.");return;}
     if (returningParticipant?.mturkWorkerId && returningParticipant.mturkWorkerId !== workerIdInput.value.trim()) {
       showEnrollmentError("Please use the Connect ID for your saved session, or start in a new private window.");return;
     }
@@ -273,6 +279,7 @@ participantForm.addEventListener("submit", async event => {
     connectId: workerIdInput.value.trim(),
     recruitmentSource: window.DRAMIFY_CONTEXT.source,
     isTest: window.DRAMIFY_CONTEXT.isTest,
+    connectEntryVerified: !window.DRAMIFY_CONTEXT.isTest && window.DRAMIFY_CONTEXT.isConnect && workerIdInput.value.trim()===window.DRAMIFY_CONTEXT.participantId.trim(),
     assignmentId: window.DRAMIFY_CONTEXT.assignmentId,
     projectId: window.DRAMIFY_CONTEXT.projectId,
     referrer: document.referrer,
@@ -590,7 +597,6 @@ document.querySelector(".signout-confirm").addEventListener("click", async () =>
     sessionStorage.removeItem(window.DRAMIFY_STORAGE_KEY(COMPLETION_SESSION_KEY));
     const completedIds=JSON.parse(localStorage.getItem(window.DRAMIFY_STORAGE_KEY("dramify.completedConnectIds.v1")) || "[]");
     localStorage.setItem(window.DRAMIFY_STORAGE_KEY("dramify.completedConnectIds.v1"),JSON.stringify([...new Set([...completedIds,activeParticipant.connectId || activeParticipant.mturkWorkerId])]));
-    localStorage.setItem(window.DRAMIFY_STORAGE_KEY("dramify.deviceCompleted.v1"),new Date().toISOString());
     localStorage.removeItem(window.DRAMIFY_STORAGE_KEY(PARTICIPANT_STORAGE_KEY));
     localStorage.removeItem(window.DRAMIFY_STORAGE_KEY(ASSIGNMENT_STORAGE_KEY));
     localStorage.removeItem(window.DRAMIFY_STORAGE_KEY(RESPONSE_START_KEY));
@@ -627,7 +633,11 @@ document.querySelector(".copy-key-code").addEventListener("click", async () => {
 });
 
 
-if(window.DRAMIFY_CONTEXT.participantId && !workerIdInput.value)workerIdInput.value=window.DRAMIFY_CONTEXT.participantId;
+if(window.DRAMIFY_CONTEXT.participantId && !workerIdInput.value)workerIdInput.value=window.DRAMIFY_CONTEXT.participantId.trim();
+if(!window.DRAMIFY_CONTEXT.isTest && window.DRAMIFY_CONTEXT.isConnect) {
+  workerIdInput.value=window.DRAMIFY_CONTEXT.participantId.trim();
+  workerIdInput.readOnly=true;
+}
 
 for(const button of document.querySelectorAll(".practice-action")) {
   const action=button.dataset.action;button.innerHTML=dramaIcon(action);
@@ -638,34 +648,6 @@ for(const button of document.querySelectorAll(".practice-action")) {
     enrollmentError.hidden=true;
   });
 }
-let sessionExpired=false;
-const sessionStart=Date.parse(localStorage.getItem(window.DRAMIFY_STORAGE_KEY(RESPONSE_START_KEY)));
-const expiryScreen=document.createElement("section");expiryScreen.className="session-expired-screen";expiryScreen.hidden=true;
-expiryScreen.innerHTML='<div><img src="assets/brand/Logo.jpg" alt="Dramify" width="186"><h1>Your survey session has expired</h1><p>The one-hour time limit has been reached. This response is incomplete and has not been submitted as a completed survey.</p><p class="expiry-sync" role="status"></p><button type="button" class="expiry-retry" hidden>Retry saving</button></div>';
-document.body.append(expiryScreen);
-async function saveExpired(){
- const status=expiryScreen.querySelector('.expiry-sync'),retry=expiryScreen.querySelector('.expiry-retry');retry.hidden=true;
- const record=surveyRecord();
- if(!record){status.textContent='No response was started.';return;}
- status.textContent='Saving your incomplete response…';
- try {await window.DramifyCloud.expire(record);status.textContent='Your incomplete response has been saved.';}
- catch(error){status.textContent='Your incomplete response is saved on this device but could not be uploaded. Please reconnect and click Retry saving.';retry.hidden=false;}
-}
-function enforceSessionLimit(event){
- if(document.querySelector('.completion-screen')?.hidden===false)return;
- if(!Number.isFinite(sessionStart) || Date.now()-sessionStart<3600000)return;
- if(event){event.preventDefault();event.stopImmediatePropagation();}
- if(sessionExpired)return;
- sessionExpired=true;document.body.classList.add('session-expired');expiryScreen.hidden=false;
- if(stayTimerFrame!==null)cancelAnimationFrame(stayTimerFrame);
- saveExpired();
-}
-expiryScreen.querySelector('.expiry-retry').addEventListener('click',saveExpired);
-for(const type of ['click','submit','input'])document.addEventListener(type,event=>{if(!expiryScreen.contains(event.target))enforceSessionLimit(event);},true);
-setInterval(enforceSessionLimit,1000);
-window.addEventListener('focus',enforceSessionLimit);
-document.addEventListener('visibilitychange',()=>enforceSessionLimit());
-enforceSessionLimit();
 document.querySelector(".enrollment-submit").disabled=false;
 window.DramifySupport.ready();
 })().catch(function(error){console.warn("Dramify startup:",error);window.DramifySupport.fatal();});

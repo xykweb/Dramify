@@ -23,9 +23,12 @@ window.DRAMIFY_CONFIG = Object.freeze({
 });
 
 const contextParams=new URLSearchParams(window.location.search);
+const connectParameters=["participantId","assignmentId","projectId"].map(key=>(contextParams.get(key)||"").trim());
+const validConnectEntry=connectParameters.every(value=>value && !/^(x+|undefined|null)$/i.test(value));
 window.DRAMIFY_CONTEXT=Object.freeze({
- isTest:contextParams.get("mode")==="test",
- source:contextParams.get("source") || (contextParams.has("participantId")?"connect":"direct"),
+ isConnect:validConnectEntry,
+ isTest:!validConnectEntry,
+ source:validConnectEntry?"connect":"preview",
  participantId:contextParams.get("participantId") || "",
  assignmentId:contextParams.get("assignmentId") || "",
  projectId:contextParams.get("projectId") || ""
