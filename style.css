@@ -349,3 +349,5 @@ section.experience-survey{max-width:none;padding:0 0 64px}
 .enrollment .practice-question > p:first-child{margin-top:0}
 .enrollment .practice-question > p:last-child{margin-bottom:0}
 .enrollment .practice-options h3{margin:0 0 22px;font-size:17px;font-weight:600;line-height:1.6;color:#382a32}
+
+.enrollment .task-practice .practice-question-prompt{margin:0 0 22px;font-size:17px;font-weight:600;line-height:1.6;color:#382a32}
