@@ -257,6 +257,7 @@ participantForm.addEventListener("submit", async event => {
     const sample=document.querySelector('.practice-poster');
     if(!sample.complete || sample.naturalWidth===0){showEnrollmentError("The sample image has not loaded. Please check your connection and reload before continuing.");return;}
     if(!document.querySelector('.practice-action[data-action="watchlist"]').matches('[aria-pressed="true"]')) {showEnrollmentError("Please add the sample series to your Watchlist before continuing.");return;}
+    if(document.querySelector('input[name="practice-count"]:checked')?.value!=="6") {showEnrollmentError("That answer is incorrect. You must add exactly 6 series to your Watchlist. Please check your answers and try again.");return;}
     if(document.querySelector('input[name="practice-like-save"]:checked')?.value!=="unlimited") {showEnrollmentError("That answer is incorrect. You can Like and Save as many series as you wish. Please check your answers and try again.");return;}
     requestStudyFullscreen();
     if (returningParticipant) enterDramify(returningParticipant,returningParticipant.accessCode);
