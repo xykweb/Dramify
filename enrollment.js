@@ -333,21 +333,22 @@ participantForm.addEventListener("submit", async event => {
 });
 
 
-// The completion code is displayed only after confirmed local account deletion.
+// Both entry modes display the completion code after confirmed response submission.
 function showCompletionScreen() {
   const exit=document.exitFullscreen || document.webkitExitFullscreen;
   if(exit && (document.fullscreenElement || document.webkitFullscreenElement))try{Promise.resolve(exit.call(document)).catch(()=>{});}catch(error){}
   document.querySelector("#dramify-app").hidden = true;
   document.querySelector(".enrollment").hidden = true;
   document.querySelector(".completion-screen").hidden = false;
-  const completion=window.DRAMIFY_CONTEXT.isTest ? {} : window.DRAMIFY_CONFIG.connect || {};
+  const completion=window.DRAMIFY_CONFIG.connect || {};
+  const willRedirect=Boolean(completion.redirectUrl) && !window.DRAMIFY_CONTEXT.isTest;
   const showCode=Boolean(completion.completionCode);
   document.querySelector(".completion-code").hidden=!showCode;
   document.querySelector(".completion-label").hidden=!showCode;
   document.querySelector(".copy-code-status").hidden=!showCode;
   document.querySelector(".completion-code").textContent = completion.completionCode || "Preview complete";
   document.querySelector(".copy-key-code").hidden = !showCode;
-  document.querySelector(".completion-card p").textContent = completion.redirectUrl ? "Your completion code is shown below. You will be redirected to CloudResearch Connect in 10 seconds. You can also click Return to Connect now." : completion.completionCode ? "Your responses have been saved. Copy the completion code below and return to CloudResearch Connect to submit it." : "";
+  document.querySelector(".completion-card p").textContent = willRedirect ? "Your completion code is shown below. You will be redirected to CloudResearch Connect in 10 seconds. You can also click Return to Connect now." : window.DRAMIFY_CONTEXT.isTest ? "Your completion code is shown below." : completion.completionCode ? "Your responses have been saved. Copy the completion code below and return to CloudResearch Connect to submit it." : "";
   document.querySelector(".completion-card p").hidden = !completion.redirectUrl && !completion.completionCode;
   document.querySelector(".return-connect")?.remove();
   if(completion.redirectUrl && !window.DRAMIFY_CONTEXT.isTest) {const link=document.createElement("a");link.href=completion.redirectUrl;link.textContent="Return to Connect";link.className="enrollment-submit return-connect";document.querySelector(".completion-card").append(link);setTimeout(()=>window.location.assign(completion.redirectUrl),10000);}
