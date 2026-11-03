@@ -314,18 +314,38 @@ participantForm.addEventListener("submit", async event => {
     return;
   }
   const button=document.querySelector("#enrollment-form .enrollment-submit");
-  siteStarting=true;button.disabled=true;button.textContent="Preparing…";
-  const connectionNotice=setTimeout(()=>showEnrollmentError("Connecting is taking longer than expected. Please check your network connection. You can refresh this page and try again; your details have been saved."),12000);
+  siteStarting=true;button.disabled=true;button.textContent="Connecting…";
+  const status=document.querySelector("#enrollment-error");
+  const setProgress=message=>{status.textContent=message;status.hidden=false;status.setAttribute("role","status");};
+  setProgress("We are connecting to the study server. Please keep this page open; you do not need to click again.");
+  let stage="connecting";
   try {
-    returningParticipant=await window.DramifyCloud.allocateCondition(participant);
-    await window.DramifyCloud.saveDraft(returningParticipant);
+    for(let attempt=1;attempt<=3;attempt++) {
+      try {
+        stage="assigning your study session";
+        returningParticipant=await window.DramifyCloud.allocateCondition(returningParticipant || participant);
+        stage="saving your study session";
+        await window.DramifyCloud.saveDraft(returningParticipant);
+        break;
+      } catch(error) {
+        const text=String(error.message || error);
+        const retryable=/fetch|network|timeout|timed out|abort|connection|temporar|gateway|service unavailable|load failed/i.test(text) || /^5\d\d$/.test(String(error.status || ""));
+        if(!retryable || attempt===3)throw error;
+        setProgress(`The connection is taking longer than expected. We are retrying automatically (${attempt + 1} of 3). Please keep this page open.`);
+        await new Promise(resolve=>setTimeout(resolve,attempt*1500));
+      }
+    }
     assignedCode=returningParticipant.accessCode;
     localStorage.setItem(window.DRAMIFY_STORAGE_KEY(ASSIGNMENT_STORAGE_KEY),assignedCode);
+    status.setAttribute("role","alert");
     showEnrollmentStep(4);
   } catch(error) {
-    showEnrollmentError(window.DramifySupport.describe(error,"session"));
+    status.setAttribute("role","alert");
+    const reason=window.DramifySupport.describe(error,"session");
+    showEnrollmentError(`We could not finish ${stage}. ${reason} Your details are saved on this device. You may click Next to try again.`);
     console.warn("Dramify assignment:",error.message);
-  } finally {clearTimeout(connectionNotice);siteStarting=false;button.disabled=false;if(enrollmentStep===1)button.textContent="Next";}
+  } finally {siteStarting=false;button.disabled=false;if(enrollmentStep===1)button.textContent="Next";}
+
   } catch(error) {
     showEnrollmentError("We could not start your session. Please allow browser storage and use an up-to-date Chrome or Edge browser, then refresh and try again.");
     console.warn("Dramify enrollment:",error.message);
