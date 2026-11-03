@@ -12,6 +12,7 @@ window.DramifyCloud = (() => {
   let interval = null;
   let timer = null;
   let queue = Promise.resolve();
+  let draftPending = null;
   let finishing = false;
   let stopped = true;
   let syncFailed = false;
@@ -51,7 +52,7 @@ window.DramifyCloud = (() => {
     const stimuli = {};
     for (let id = 1; id <= 16; id++) for (const version of ["a", "b"]) {
       const key = `${id}${version}`;
-      const exposed = version === ((id % 2 === 1) === (record.condition === "A") ? "a" : "b");
+      const exposed = record.dramaOrder?.length===16 && version === ((id % 2 === 1) === (record.condition === "A") ? "a" : "b");
       const behavior=record.behaviors?.[key] || {};
       stimuli[key]={exposed,watchlist:exposed?Number(Boolean(behavior.watchlist)):null,liked:exposed?Number(Boolean(behavior.liked)):null,saved:exposed?Number(Boolean(behavior.saved)):null};
     }
@@ -67,6 +68,7 @@ window.DramifyCloud = (() => {
     behaviorCounts.allocation_method = record.allocationMethod || "independent-legacy";
     behaviorCounts.fullscreen = record.fullscreen || null;
     behaviorCounts.is_test = Boolean(record.isTest);
+    behaviorCounts.stimulus_manifest=record.stimulusManifest || null;
     behaviorCounts.connect_entry_verified=Boolean(record.connectEntryVerified);
     try {behaviorCounts.time_zone=record.timeZone || Intl.DateTimeFormat().resolvedOptions().timeZone || "UTC";} catch(error){behaviorCounts.time_zone="UTC";}
 
@@ -178,13 +180,17 @@ window.DramifyCloud = (() => {
     localStorage.setItem(window.DRAMIFY_STORAGE_KEY(profileKey),JSON.stringify(record));
     return record;
   }
-  function flush(completed = false) {
-    if (stopped) return Promise.resolve();
+  function flush(completed = false, allowStopped = false) {
+    if (stopped && !allowStopped) return Promise.resolve();
+    if(!completed && draftPending)return draftPending;
     // Serialize writes. Read a fresh snapshot when a request actually executes,
     // so an earlier request cannot overwrite a more recent choice or rating.
     const work = queue.catch(() => {}).then(async () => {
       const userId = await ensureAuth();
       const record = readParticipant();
+      // A final request may have committed even if its acknowledgement was lost.
+      // Never follow a final submission attempt with a draft that clears completion.
+      if(!completed && record.postSurvey?.completedAt)return;
       if (completed) {
         requireSixWatchlist(record);
         if(!["male","female","nonbinary-other","prefer-not-to-say"].includes(record.gender) || !Number.isInteger(record.age) || record.age<1 || record.age>120 || !Number.isFinite(record.monthlyIncome) || record.monthlyIncome < 0) throw new Error("Please complete your demographic information.");
@@ -192,16 +198,27 @@ window.DramifyCloud = (() => {
         if (!keys.every(key => Number.isInteger(record.postSurvey?.[key]) && record.postSurvey[key] >= 1 && record.postSurvey[key] <= 7)) throw new Error("Please complete the questionnaire before finishing.");
       }
       const row = buildSnapshot(record,userId,completed);
-      const {error} = await client.from("dramify_responses").upsert(row,{onConflict:"id"});
+      const {data,error} = await client.from("dramify_responses").upsert(row,{onConflict:"id"}).select("id,completed").single();
       if (error) throw error;
+      if(!data || data.id!==row.id || data.completed!==completed)throw new Error("The server did not confirm that the response was saved");
       showFailure(false);
     });
     queue = work;
-    return work.catch(error => {
+    const result = work.catch(error => {
       showFailure(true);
       console.warn("Dramify sync failed:",error.message || "Connection error");
       throw error;
     });
+    if(!completed){
+      const pending=result.finally(()=>{if(draftPending===pending)draftPending=null;});
+      draftPending=pending;
+      return pending;
+    }
+    return result;
+  }
+  async function saveDraft(participant) {
+    participantId=participant.id;
+    await flush(false,true);
   }
   function changed() {
     if (stopped || finishing) return;
@@ -220,6 +237,13 @@ window.DramifyCloud = (() => {
       try {checkpoint();flush().catch(() => {});} catch (error) {showFailure(true);}
     },10000);
     flush().catch(() => {});
+  }
+  function beginQuestionnaire() {
+    checkpoint();
+    const record=readParticipant();
+    record.postSurvey={...record.postSurvey,inProgress:true,version:"post-experience-v4",updatedAt:new Date().toISOString()};
+    localStorage.setItem(window.DRAMIFY_STORAGE_KEY(profileKey),JSON.stringify(record));
+    changed();
   }
   async function complete() {
     if (stopped && finishing) return;
@@ -265,5 +289,5 @@ window.DramifyCloud = (() => {
     const stored = Math.max(0, Number(readParticipant()?.browsingDurationSeconds) || 0);
     return stored + (!stopped && !finishing && visible && !readParticipant()?.postSurvey?.inProgress ? Math.max(0, (performance.now() - lastTick) / 1000) : 0);
   }
-  return {allocateCondition,start,changed,complete,clearSession,getDurationSeconds,getSyncStatus:() => ({failed:syncFailed})};
+  return {allocateCondition,saveDraft,start,changed,beginQuestionnaire,complete,clearSession,getDurationSeconds,getSyncStatus:() => ({failed:syncFailed})};
 })();

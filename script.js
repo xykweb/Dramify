@@ -59,6 +59,11 @@ function initializeDramify(participant) {
     if (!record || record.id !== participant.id) throw new Error("Participant changed");
     return record;
   }
+  const manifest=participant.stimulusManifest;
+  if(manifest) {
+    if(!Array.isArray(manifest) || manifest.length!==16 || !displayed.every((drama,i)=>manifest[i]?.id===drama.id && manifest[i]?.version===drama.version && typeof manifest[i]?.title==="string"))throw new Error("Saved stimulus manifest is invalid");
+    displayed.forEach((drama,i)=>{drama.title=manifest[i].title;});
+  } else participant.stimulusManifest=displayed.map(drama=>({id:drama.id,version:drama.version,title:drama.title,image:drama.image}));
   participant.behaviors ||= {};
   participant.behaviorEvents ||= [];
   participant.interfaceVersion = "cards-v5";

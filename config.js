@@ -6,8 +6,7 @@ window.DRAMIFY_MOBILE_BLOCKED = /Android|iPhone|iPad|iPod|IEMobile|Opera Mini/i.
   || navigator.userAgentData?.mobile === true;
 if (window.DRAMIFY_MOBILE_BLOCKED) document.documentElement.classList.add("mobile-device");
 
-// Change these 4-digit codes, then redeploy to update access and assignment.
-// This is a client-side gate, not server-enforced authentication.
+// Internal cell identifiers only. Participants do not enter these values.
 window.DRAMIFY_CONFIG = Object.freeze({
   accessCodes: Object.freeze({
     "2002": "A",
@@ -24,13 +23,15 @@ window.DRAMIFY_CONFIG = Object.freeze({
 
 const contextParams=new URLSearchParams(window.location.search);
 const connectParameters=["participantId","assignmentId","projectId"].map(key=>(contextParams.get(key)||"").trim());
-const validConnectEntry=connectParameters.every(value=>value && !/^(x+|undefined|null)$/i.test(value));
+const hasConnectParameters=["participantId","assignmentId","projectId"].some(key=>contextParams.has(key));
+const validConnectEntry=connectParameters.every(value=>value && value.length<=256 && !/^(x+|undefined|null)$/i.test(value)) && /^[A-Za-z0-9]{1,64}$/.test(connectParameters[0]);
 window.DRAMIFY_CONTEXT=Object.freeze({
  isConnect:validConnectEntry,
+ invalidEntry:hasConnectParameters && !validConnectEntry,
  isTest:!validConnectEntry,
  source:validConnectEntry?"connect":"preview",
- participantId:contextParams.get("participantId") || "",
- assignmentId:contextParams.get("assignmentId") || "",
- projectId:contextParams.get("projectId") || ""
+ participantId:connectParameters[0],
+ assignmentId:connectParameters[1],
+ projectId:connectParameters[2]
 });
 window.DRAMIFY_STORAGE_KEY=key=>window.DRAMIFY_CONTEXT.isTest?"test."+key:key;

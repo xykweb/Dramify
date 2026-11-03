@@ -56,5 +56,14 @@ window.DramifyContent = (() => {
     // Apply only after every record passed validation; never mix old/new titles.
     for (const drama of dramas) for (const version of ["a", "b"]) Object.assign(drama[version], records.get(`${drama.id}${version}`));
   }
-  return {load, validateRows};
+  async function preload(dramas) {
+    await Promise.all([...dramas.map(drama=>new URL(drama.a.image,base).href),new URL("assets/brand/home-banner.png",base).href].map(src=>new Promise((resolve,reject)=>{
+      const image=new Image();
+      const timer=setTimeout(()=>{image.onload=image.onerror=null;reject(new Error("Series images timed out"));},30000);
+      image.onload=()=>{clearTimeout(timer);resolve();};
+      image.onerror=()=>{clearTimeout(timer);reject(new Error("A required series image is missing"));};
+      image.src=src;
+    })));
+  }
+  return {load, validateRows, preload};
 })();

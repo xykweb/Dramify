@@ -7,6 +7,11 @@ if (window.DRAMIFY_MOBILE_BLOCKED) {window.DramifySupport.ready();return;}
 const PARTICIPANT_STORAGE_KEY = "dramify.participant.v1";
 const participantForm = document.querySelector("#enrollment-form");
 const enrollmentError = document.querySelector("#enrollment-error");
+if(window.DRAMIFY_CONTEXT.invalidEntry){
+ enrollmentError.textContent="This study link is incomplete or invalid. Please reopen the study from your CloudResearch Connect project page. To preview the website, use the address without any parameters.";
+ enrollmentError.hidden=false;window.DramifySupport.ready();return;
+}
+
 // Keep completion functional even when the editable HTML omits its optional template.
 if(!document.querySelector(".completion-screen")) {
   const screen=document.createElement("section");screen.className="completion-screen";screen.hidden=true;screen.setAttribute("aria-labelledby","completion-title");
@@ -82,7 +87,8 @@ if(!await acquireResponseLock()) {
 }
 try {
   const navigation=performance.getEntriesByType("navigation")[0];
-  const refresh=navigation?.type === "reload" && sessionStorage.getItem(window.DRAMIFY_STORAGE_KEY("dramify.visit.v1"));
+  const entrySignature=JSON.stringify([window.DRAMIFY_CONTEXT.participantId,window.DRAMIFY_CONTEXT.assignmentId,window.DRAMIFY_CONTEXT.projectId]);
+  const refresh=navigation?.type === "reload" && sessionStorage.getItem(window.DRAMIFY_STORAGE_KEY("dramify.visit.v1"))===entrySignature;
   if(!refresh) {
     for(const key of [PARTICIPANT_STORAGE_KEY,ASSIGNMENT_STORAGE_KEY,RESPONSE_START_KEY,"dramify.supabase.auth"])
       localStorage.removeItem(window.DRAMIFY_STORAGE_KEY(key));
@@ -90,7 +96,7 @@ try {
     fullscreenState={requested:false,entered:false,exitedEarly:false,events:[]};
     localStorage.setItem(window.DRAMIFY_STORAGE_KEY(RESPONSE_START_KEY),new Date().toISOString());
   }
-  sessionStorage.setItem(window.DRAMIFY_STORAGE_KEY("dramify.visit.v1"),"active");
+  sessionStorage.setItem(window.DRAMIFY_STORAGE_KEY("dramify.visit.v1"),entrySignature);
 } catch(error) {
   showEnrollmentError("Please allow browser storage, then refresh this page to continue.");
   document.querySelector(".enrollment-submit").disabled=true;
@@ -154,7 +160,11 @@ async function enterDramify(participant, code) {
   try {
     if(!await acquireResponseLock()){showEnrollmentError("Dramify is already open in another tab. Please continue there or close it and try again.");return;}
     await window.DramifyContent.load(dramas);
-    showDramify(participant, code);
+    await window.DramifyContent.preload(dramas);
+    // Auth/allocation may have added fields while the content was loading.
+    const latest=JSON.parse(localStorage.getItem(window.DRAMIFY_STORAGE_KEY(PARTICIPANT_STORAGE_KEY)) || "null");
+    if(!latest || latest.id!==participant.id)throw new Error("Participant changed");
+    showDramify(latest, code);
   } catch (error) {
     if(!siteStarted){releaseResponseLock?.();releaseResponseLock=null;}
     showEnrollmentError(location.protocol === "file:"
@@ -244,6 +254,8 @@ participantForm.addEventListener("submit", async event => {
   if (siteStarted || siteStarting) return;
   try {
   if (enrollmentStep === 4) {
+    const sample=document.querySelector('.practice-poster');
+    if(!sample.complete || sample.naturalWidth===0){showEnrollmentError("The sample image has not loaded. Please check your connection and reload before continuing.");return;}
     if(!document.querySelector('.practice-action[data-action="watchlist"]').matches('[aria-pressed="true"]')) {showEnrollmentError("Please add the sample series to your Watchlist before continuing.");return;}
     if(document.querySelector('input[name="practice-like-save"]:checked')?.value!=="unlimited") {showEnrollmentError("That answer is incorrect. You can Like and Save as many series as you wish. Please check your answers and try again.");return;}
     requestStudyFullscreen();
@@ -305,6 +317,7 @@ participantForm.addEventListener("submit", async event => {
   const connectionNotice=setTimeout(()=>showEnrollmentError("Connecting is taking longer than expected. Please check your network connection. You can refresh this page and try again; your details have been saved."),12000);
   try {
     returningParticipant=await window.DramifyCloud.allocateCondition(participant);
+    await window.DramifyCloud.saveDraft(returningParticipant);
     assignedCode=returningParticipant.accessCode;
     localStorage.setItem(window.DRAMIFY_STORAGE_KEY(ASSIGNMENT_STORAGE_KEY),assignedCode);
     showEnrollmentStep(4);
@@ -563,7 +576,7 @@ document.querySelector(".selection-next").addEventListener("click", () => {
   if(!canFinishExperience()) {window.alert(document.querySelector(".signout-error").textContent);return;}
   surveyPage=validSurveyPage(surveyRecord()?.postSurvey?.page);
   window.DramifyCloud.changed();
-  saveSurvey({inProgress:true});renderSurvey();openSurveyPage();
+  window.DramifyCloud.beginQuestionnaire();renderSurvey();openSurveyPage();
 });
 document.querySelector(".signout-confirm").addEventListener("click", async () => {
   if (!activeParticipant) return;
