@@ -90,6 +90,7 @@
             </ol>
             <section class="task-practice" aria-labelledby="practice-title">
               <h2 id="practice-title">Try it first</h2>
+              <div class="practice-question">
               <p>Let’s try an example. Click the “+” button below to add this sample series to your Watchlist.</p>
               <div class="practice-card"><img src="assets/sample%20poster.png" alt="Sample series poster" class="practice-poster"><div class="practice-actions">
                 <button type="button" class="practice-action" data-action="watchlist" aria-label="Add sample to Watchlist" aria-pressed="false"></button>
@@ -97,7 +98,8 @@
                 <button type="button" class="practice-action" data-action="saved" aria-label="Save sample" aria-pressed="false"></button>
               </div></div>
               <p id="practice-status" role="status">Please click the “+” button to add the sample series.</p>
-              <fieldset class="practice-options"><legend>How many series must you add to your Watchlist in the upcoming task?</legend>
+              </div>
+              <div class="practice-question practice-options" role="group" aria-labelledby="practice-count-title"><h3 id="practice-count-title">How many series must you add to your Watchlist in the upcoming task?</h3>
                 <label><input type="radio" name="practice-count" value="1" required> 1</label>
                 <label><input type="radio" name="practice-count" value="2" required> 2</label>
                 <label><input type="radio" name="practice-count" value="3" required> 3</label>
@@ -111,8 +113,8 @@
                 <label><input type="radio" name="practice-count" value="11" required> 11</label>
                 <label><input type="radio" name="practice-count" value="12" required> 12</label>
                 <label><input type="radio" name="practice-count" value="unlimited" required> As many as I wish (no limit)</label>
-              </fieldset>
-              <fieldset class="practice-options"><legend>How many series can you Like or Save in the upcoming task?</legend>
+              </div>
+              <div class="practice-question practice-options" role="group" aria-labelledby="practice-like-save-title"><h3 id="practice-like-save-title">How many series can you Like or Save in the upcoming task?</h3>
                 <label><input type="radio" name="practice-like-save" value="1" required> 1</label>
                 <label><input type="radio" name="practice-like-save" value="2" required> 2</label>
                 <label><input type="radio" name="practice-like-save" value="3" required> 3</label>
@@ -126,7 +128,7 @@
                 <label><input type="radio" name="practice-like-save" value="11" required> 11</label>
                 <label><input type="radio" name="practice-like-save" value="12" required> 12</label>
                 <label><input type="radio" name="practice-like-save" value="unlimited" required> As many as I wish (no limit)</label>
-              </fieldset>
+              </div>
             </section>
 
           </div>

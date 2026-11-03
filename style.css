@@ -343,3 +343,9 @@ section.experience-survey{max-width:none;padding:0 0 64px}
 .enrollment .practice-options label{display:flex;align-items:center;gap:12px;margin:0;padding:9px 0;font-size:16px;font-weight:400}
 .enrollment .practice-options input{width:18px;height:18px;margin:0;flex-shrink:0;accent-color:#c82867}
 
+
+/* Practice: three separate question cards matching the experience survey. */
+.enrollment .task-practice .practice-question{margin:22px 0 24px;padding:24px;border:1px solid #e8dce2;border-radius:8px;min-width:0;background:#fff}
+.enrollment .practice-question > p:first-child{margin-top:0}
+.enrollment .practice-question > p:last-child{margin-bottom:0}
+.enrollment .practice-options h3{margin:0 0 22px;font-size:17px;font-weight:600;line-height:1.6;color:#382a32}
