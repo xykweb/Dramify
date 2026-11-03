@@ -244,6 +244,8 @@ participantForm.addEventListener("submit", async event => {
   if (siteStarted || siteStarting) return;
   try {
   if (enrollmentStep === 4) {
+    if(!document.querySelector('.practice-action[data-action="watchlist"]').matches('[aria-pressed="true"]')) {showEnrollmentError("Please add the sample series to your Watchlist before continuing.");return;}
+    if(document.querySelector("#practice-like").value!=="unlimited" || document.querySelector("#practice-save").value!=="unlimited") {showEnrollmentError("That answer is incorrect. You can Like and Save as many series as you wish. Please check your answers and try again.");return;}
     requestStudyFullscreen();
     if (returningParticipant) enterDramify(returningParticipant,returningParticipant.accessCode);
     return;
@@ -627,6 +629,15 @@ document.querySelector(".copy-key-code").addEventListener("click", async () => {
 
 if(window.DRAMIFY_CONTEXT.participantId && !workerIdInput.value)workerIdInput.value=window.DRAMIFY_CONTEXT.participantId;
 
+for(const button of document.querySelectorAll(".practice-action")) {
+  const action=button.dataset.action;button.innerHTML=dramaIcon(action);
+  button.addEventListener("click",()=>{
+    const selected=button.getAttribute("aria-pressed")!=="true";button.setAttribute("aria-pressed",String(selected));
+    button.innerHTML=dramaIcon(action==="watchlist" && selected?"check":action);
+    if(action==="watchlist")document.querySelector("#practice-status").textContent=selected?"Sample series added to your Watchlist. This example does not count toward your 6 selections.":"Please click the “+” button to add the sample series.";
+    enrollmentError.hidden=true;
+  });
+}
 document.querySelector(".enrollment-submit").disabled=false;
 window.DramifySupport.ready();
 })().catch(function(error){console.warn("Dramify startup:",error);window.DramifySupport.fatal();});

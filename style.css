@@ -320,3 +320,20 @@ section.experience-survey{max-width:none;padding:0 0 64px}
 .survey-question{scroll-margin-top:120px}
 @media(max-width:700px){section.experience-survey{padding:0 0 40px}.survey-brand-header{grid-template-columns:110px minmax(0,1fr) 110px;gap:12px;padding:16px 20px;min-height:76px}.survey-brand-header img{width:110px}.survey-brand-header h1{font-size:20px}.survey-content{padding:28px 20px 0}}
 
+
+.task-practice{margin-top:32px;padding-top:28px;border-top:1px solid #eadce3}
+.task-practice h2{font-size:23px;margin:0 0 14px}
+.practice-card{width:210px;margin:22px auto}
+.practice-poster{display:block;width:100%;height:auto;border-radius:6px}
+.practice-actions{display:flex;justify-content:space-between;gap:12px;margin-top:14px}
+.practice-action{display:grid;place-items:center;width:48px;height:48px;border:1px solid #e3d7de;border-radius:50%;background:#fff;color:#8b7d87}
+.practice-action svg{width:25px;height:25px}
+.practice-action[aria-pressed=true]{color:#bd205b;background:#fbe8f0}
+.practice-action[data-action=liked][aria-pressed=true] svg{fill:#e93670;stroke:#e93670}
+.practice-action[data-action=saved][aria-pressed=true] svg{fill:#dcb32a;stroke:#dcb32a}
+#practice-status{font-size:15px;line-height:1.6;text-align:center;color:#65505d}
+.watchlist-progress{margin:26px 10px 12px;padding:18px 14px;border:1px solid #e3cbd6;border-radius:10px;background:#fff8fb;color:#49343f}
+.watchlist-progress p{font-size:13px;line-height:1.6;margin:0 0 10px}
+.watchlist-progress p:last-child{margin:10px 0 0}
+.watchlist-progress strong{font-size:20px;color:#b5205b}
+.watchlist-progress.is-complete{background:#f7edf2;border-color:#bc6b8d}

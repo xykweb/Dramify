@@ -129,7 +129,10 @@ function initializeDramify(participant) {
   }
   function render() {
     const record=read();
-    document.querySelector(".selection-complete-bar").hidden=displayed.filter(item=>state(record,item).watchlist).length!==6;
+    const watchlistCount=displayed.filter(item=>state(record,item).watchlist).length;
+    document.querySelector(".selection-complete-bar").hidden=watchlistCount!==6;
+    document.querySelector(".watchlist-selected-count").textContent=String(watchlistCount);
+    document.querySelector(".watchlist-progress").classList.toggle("is-complete",watchlistCount===6);
     document.querySelector(".home-promotion").hidden=currentView!=="home";
     for(const [view,button] of Object.entries(nav))button.setAttribute("aria-pressed",String(view===currentView));
     grid.hidden=false;

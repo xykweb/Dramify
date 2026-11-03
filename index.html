@@ -47,14 +47,14 @@
     });
   })();
   </script>
-  <link rel="stylesheet" href="style.css?v=20261102-text-notes">
+  <link rel="stylesheet" href="style.css?v=20261103-practice">
   <script src="config.js?v=20261101-mobile50" defer></script>
   <script src="vendor/supabase.js" defer></script>
   <script src="vendor/xlsx.full.min.js" defer></script>
   <script src="catalog.js?v=20261102-reliability" defer></script>
   <script src="cloud.js?v=20261102-timezone" defer></script>
-  <script src="script.js?v=20261102-reliability" defer></script>
-  <script src="enrollment.js?v=20261102-timezone" defer></script>
+  <script src="script.js?v=20261103-progress" defer></script>
+  <script src="enrollment.js?v=20261103-practice" defer></script>
 </head>
 <body class="enrolling">
   <section id="connection-help" role="alert" hidden style="max-width:820px;margin:24px auto;padding:20px 24px;border:1px solid #d7a0b6;border-radius:10px;background:#fff8fb;color:#382a32;font:16px/1.6 Arial,sans-serif">
@@ -88,7 +88,23 @@
               <li>There are <strong>no right or wrong answers</strong>, so please make your selections based on your genuine feelings. Afterwards, we will ask you some questions about your thoughts when making these selections.</li>
               <li class="task-time-limit" hidden>The recommended time to make your selections is <strong>90 seconds</strong>. A countdown timer will appear in the left sidebar to help you keep track of the time remaining. However, you may take as long as you need to complete the task, and your response time will not affect your payment.</li>
             </ol>
-            <p class="task-ready">If you have read and agreed to the instructions, please click <strong>Next</strong> to enter Dramify.</p>
+            <section class="task-practice" aria-labelledby="practice-title">
+              <h2 id="practice-title">Try it first</h2>
+              <p>To check that you understand the task, please add the sample series below to your Watchlist.</p>
+              <div class="practice-card"><img src="assets/sample%20poster.png" alt="Sample series poster" class="practice-poster"><div class="practice-actions">
+                <button type="button" class="practice-action" data-action="watchlist" aria-label="Add sample to Watchlist" aria-pressed="false"></button>
+                <button type="button" class="practice-action" data-action="liked" aria-label="Like sample" aria-pressed="false"></button>
+                <button type="button" class="practice-action" data-action="saved" aria-label="Save sample" aria-pressed="false"></button>
+              </div></div>
+              <p id="practice-status" role="status">Please click the “+” button to add the sample series.</p>
+              <label for="practice-count">How many series must you add to your Watchlist in the upcoming task?</label>
+              <input id="practice-count" type="number" min="6" max="6" step="1" required>
+              <label for="practice-like">How many series can you Like in the upcoming task?</label>
+              <select id="practice-like" required><option value="">Select an answer</option><option>1</option><option>3</option><option>6</option><option>9</option><option>12</option><option value="unlimited">As many as I wish (no limit)</option></select>
+              <label for="practice-save">How many series can you Save in the upcoming task?</label>
+              <select id="practice-save" required><option value="">Select an answer</option><option>1</option><option>3</option><option>6</option><option>9</option><option>12</option><option value="unlimited">As many as I wish (no limit)</option></select>
+            </section>
+            <p class="task-ready">Once you have completed the example and answered the questions correctly, please click <strong>Next</strong> to enter Dramify.</p>
           </div>
         </fieldset>
         <p id="enrollment-error" role="alert" hidden></p>
@@ -111,6 +127,7 @@
       <button class="watchlist-filter" type="button" aria-pressed="false"><svg aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><path d="M6 3h12v19l-6-4-6 4V3Z"/></svg>Saved</button>
     </nav>
       <div class="stay-timer" role="timer" hidden aria-label="Time Remaining (in seconds)"><svg aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><circle cx="12" cy="14" r="8"/><path d="M9 2h6M12 2v4M18 6l2-2M12 9v5l3 2"/></svg><span>Time Remaining (in seconds)</span><span class="stay-timer-value">90.00</span></div>
+    <section class="watchlist-progress" aria-label="Watchlist progress"><p>My Watchlist</p><strong><span class="watchlist-selected-count" role="status">0</span> / 6 selected</strong><p>Please select exactly <b>6 series</b> to continue.</p></section>
     <footer class="sidebar-footer" aria-label="Information">
     </footer>
   </aside>
